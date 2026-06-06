@@ -22,7 +22,7 @@ const TAB_TITLES: Record<string, string> = {
   intake: "Hujjat qabul (Intake) // Yangi Hujjat Qo'shish",
   documents: "Hujjatlar ro'yxati // Arxiv Hujjatlari Ombori",
   settings: "Kategoriyalar & Shkaflar // Tizim Spravochniklari",
-  admin: "Admin panel // Tizim Sozlamalari & Audit",
+  admin: "Admin panel // Foydalanuvchilar boshqaruvi",
 };
 
 export default function App() {

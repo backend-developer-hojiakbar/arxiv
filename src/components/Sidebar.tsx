@@ -37,7 +37,7 @@ export default function Sidebar({ currentUser, activeTab, onTabChange, onLogout,
     isDocRole && { id: "intake", label: "Hujjat qabul (Intake)", icon: FilePlus2, desc: "PDF va Fizik joylashuv" },
     { id: "documents", label: "Hujjatlar ro'yxati", icon: Database, desc: "Inventar & Holat" },
     isDocRole && { id: "settings", label: "Mundarija", icon: Scroll, desc: "Kategoriyalar & Shkaflar" },
-    isAdmin && { id: "admin", label: "Admin panel", icon: FolderLock, desc: "Audit & Hisoblar" },
+    isAdmin && { id: "admin", label: "Admin panel", icon: FolderLock, desc: "Foydalanuvchilar" },
   ].filter(Boolean) as any[];
 
   const sidebarContent = (
@@ -50,7 +50,7 @@ export default function Sidebar({ currentUser, activeTab, onTabChange, onLogout,
             </div>
             <div>
               <h1 className="text-base font-semibold text-white leading-tight">{t("Institut Arxivi")}</h1>
-              <p className="text-[11px] text-blue-200 mt-0.5">{t("Boshqaruv Tizimi v1.0")}</p>
+              <p className="text-[11px] text-blue-200 mt-0.5">{t("Boshqaruv Tizimi")}</p>
             </div>
           </div>
         </div>

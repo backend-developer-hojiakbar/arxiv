@@ -12,21 +12,15 @@ import {
   UserPlus, 
   Check, 
   X, 
-  AlertTriangle,
-  History,
   Lock,
-  Globe
 } from "lucide-react";
 import { useTranslation } from "./LanguageContext.tsx";
 
 export default function AdminTab() {
   const { t } = useTranslation();
   const [users, setUsers] = useState<any[]>([]);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"users" | "audit">("users");
   const [loading, setLoading] = useState(false);
 
-  // User form states
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<UserRole>(UserRole.XODIM);
@@ -34,7 +28,6 @@ export default function AdminTab() {
   const [userError, setUserError] = useState("");
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
-  // Edit User details states
   const [editFullName, setEditFullName] = useState("");
   const [editRole, setEditRole] = useState<UserRole>(UserRole.XODIM);
   const [editPassword, setEditPassword] = useState("");
@@ -44,13 +37,8 @@ export default function AdminTab() {
     setLoading(true);
     setUserError("");
     try {
-      if (activeTab === "users") {
-        const data = await api.getUsers();
-        setUsers(data);
-      } else {
-        const logs = await api.getAuditLogs();
-        setAuditLogs(logs);
-      }
+      const data = await api.getUsers();
+      setUsers(data);
     } catch (err: any) {
       setUserError(err.message || t("Ma'lumotlarni olishda xatolik yuz berdi"));
     } finally {
@@ -60,9 +48,8 @@ export default function AdminTab() {
 
   useEffect(() => {
     bootstrapAdminData();
-  }, [activeTab]);
+  }, []);
 
-  // Submit User
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setUserError("");
@@ -92,7 +79,6 @@ export default function AdminTab() {
     }
   };
 
-  // Start edit
   const startEditUser = (u: any) => {
     setEditingUserId(u.id);
     setEditFullName(u.fullName);
@@ -101,7 +87,6 @@ export default function AdminTab() {
     setEditPassword("");
   };
 
-  // Submit edit user
   const handleSaveEditUser = async (id: string) => {
     setUserError("");
     if (!editFullName.trim()) return;
@@ -129,13 +114,12 @@ export default function AdminTab() {
 
   return (
     <div className="space-y-6 selection:bg-primary-100 selection:text-primary-900">
-      {/* Header */}
       <div className="border-b border-slate-200 pb-4">
         <h2 className="text-xl page-title">
           {t("Administrator Boshqaruv Markazi")}
         </h2>
         <p className="text-sm text-neutral-500 mt-0.5">
-          {t("Fizik arxiv xodimlari hisoblari hamda tizimdagi barcha faoliyatlar audit jurnalini nazorat qilish")}
+          {t("Fizik arxiv xodimlari hisoblarini boshqarish")}
         </p>
       </div>
 
@@ -146,29 +130,10 @@ export default function AdminTab() {
         </div>
       )}
 
-      {/* Admin subtabs selector */}
-      <div className="flex border border-slate-200 p-1 bg-slate-50 rounded-lg w-full sm:w-fit text-sm">
-        <button
-          onClick={() => setActiveTab("users")}
-          className={`py-2 px-4 font-medium flex items-center gap-2 cursor-pointer rounded-md transition-all ${activeTab === "users" ? "bg-primary-600 text-white shadow-sm" : "hover:bg-white text-slate-700"}`}
-        >
-          <Users className="w-4 h-4" /> {t("Foydalanuvchilar hisoblari")}
-        </button>
-        <button
-          onClick={() => setActiveTab("audit")}
-          className={`py-2 px-4 font-medium flex items-center gap-2 cursor-pointer rounded-md transition-all ${activeTab === "audit" ? "bg-primary-600 text-white shadow-sm" : "hover:bg-white text-slate-700"}`}
-        >
-          <History className="w-4 h-4" /> {t("Audit tizim jurnali")}
-        </button>
-      </div>
-
       {loading ? (
         <div className="py-12 text-center text-sm text-slate-500">{t("Markaziy so'rov ko'rib chiqilmoqda...")}</div>
-      ) : activeTab === "users" ? (
-        /* USERS CRUD VIEW */
+      ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-none">
-          
-          {/* User addition Form */}
           <div className="border border-slate-200 p-5 bg-white space-y-4">
             <div className="flex items-center gap-2 border-b border-neutral-100 pb-2">
               <UserPlus className="w-4 h-4 text-slate-800" />
@@ -246,10 +211,11 @@ export default function AdminTab() {
             </form>
           </div>
 
-          {/* Users grid list */}
           <div className="lg:col-span-2 border border-slate-200 overflow-hidden bg-white">
             <div className="bg-primary-900 px-4 py-3 text-white flex justify-between items-center text-xs font-mono font-bold uppercase tracking-wider">
-              <span>{t("Mavjud foiz xodimlari")}</span>
+              <span className="flex items-center gap-1.5">
+                <Users className="w-4 h-4" /> {t("Foydalanuvchilar hisoblari")}
+              </span>
               <span>{t("Ro'yxati")}</span>
             </div>
 
@@ -259,7 +225,6 @@ export default function AdminTab() {
                 return (
                   <div key={u.id} className="p-4 bg-white transition-colors hover:bg-neutral-50">
                     {isEditing ? (
-                      /* Inline editing inputs */
                       <div className="space-y-3 text-xs">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
@@ -325,7 +290,6 @@ export default function AdminTab() {
                         </div>
                       </div>
                     ) : (
-                      /* Display details */
                       <div className="flex justify-between items-start gap-4 text-xs font-sans">
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
@@ -355,7 +319,6 @@ export default function AdminTab() {
                           )}
                         </div>
 
-                        {/* Can't edit yourself to prevent self de-activation lockouts */}
                         <button
                           disabled={u.id === "u-1"}
                           onClick={() => startEditUser(u)}
@@ -369,57 +332,6 @@ export default function AdminTab() {
                 );
               })}
             </div>
-          </div>
-
-        </div>
-      ) : (
-        /* AUDIT SYSTEM LOGS TIMELINE LIST */
-        <div className="border border-slate-200 bg-white">
-          <div className="bg-primary-900 px-4 py-3 text-white flex justify-between items-center text-xs font-mono font-bold uppercase tracking-wider border-b border-slate-200">
-            <span className="flex items-center gap-1.5"><Globe className="w-4 h-4 text-white" /> {t("Xavfsizlik Audit Jurnali")}</span>
-            <span>{t("Jami")} {auditLogs.length} {t("ta yozuv")}</span>
-          </div>
-
-          <div className="overflow-x-auto max-h-[500px]">
-            <table className="w-full text-left border-collapse bg-white">
-              <thead>
-                <tr className="border-b border-neutral-300 text-xs font-medium text-neutral-400 bg-neutral-50">
-                  <th className="py-2 px-3">Log vaqti & Sana</th>
-                  <th className="py-2 px-3">Tizim Foydalanuvchisi</th>
-                  <th className="py-2 px-3">Bajarilgan Amallar</th>
-                  <th className="py-2 px-3">Kategoriya burchagi</th>
-                  <th className="py-2 px-3 text-right">IP Address</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 text-[11px] font-mono text-neutral-600">
-                {auditLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-neutral-50 transition-colors">
-                    <td className="py-2 px-3 font-semibold text-neutral-500">
-                      {new Date(log.createdAt).toLocaleString("uz-UZ")}
-                    </td>
-                    <td className="py-2 px-3 font-sans text-xs text-slate-800 font-semibold">
-                      {log.userFullName}
-                    </td>
-                    <td className="py-2 px-3 text-slate-800 font-semibold font-mono text-xs">
-                      {log.action}
-                    </td>
-                    <td className="py-2 px-3 text-neutral-400 uppercase text-[9.5px]">
-                      {log.entityType} ({log.entityId || "system"})
-                    </td>
-                    <td className="py-2 px-3 text-right font-bold text-neutral-600">
-                      {log.ip}
-                    </td>
-                  </tr>
-                ))}
-                {auditLogs.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="text-center py-12 text-neutral-400 uppercase font-bold">
-                      {t("Audit jurnali bo'sh")}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
           </div>
         </div>
       )}

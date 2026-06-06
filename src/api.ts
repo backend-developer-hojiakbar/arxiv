@@ -256,7 +256,7 @@ export const api = {
       };
     });
 
-    const songgiYozuvlar = (activities || []).map((item) => ({
+    const songgiYozuvlar = (activities || []).slice(0, 10).map((item) => ({
       id: item.id,
       receivedAt: item.created_at,
       studentName: item.student_name || "—",

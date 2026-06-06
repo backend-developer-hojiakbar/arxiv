@@ -73,7 +73,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </button>
           </div>
           <span className="hidden md:block text-xs text-slate-400">
-            {t("Hujjatlarni boshqarish tizimi v1.0")}
+            {t("Hujjatlarni boshqarish tizimi")}
           </span>
         </div>
       </div>
@@ -156,16 +156,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               </button>
             </div>
           </form>
-
-          <div className="mt-6 pt-5 border-t border-dashed border-slate-200">
-            <p className="text-xs font-medium text-slate-500 mb-2">
-              {t("Tizim administratori bergan login ma'lumotlaridan foydalaning")}
-            </p>
-            <div className="text-xs text-slate-600 bg-slate-50 p-3 border border-slate-200 rounded-lg">
-              <span className="text-slate-500">{t("API server")}: </span>
-              <strong className="text-slate-800">api.arxivfjsti.uz</strong>
-            </div>
-          </div>
         </motion.div>
       </div>
 
@@ -173,10 +163,8 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         <div>
           &copy; {new Date().getFullYear()} {t("Institut Axivi Bo'limi. barcha huquqlar himoyalangan.")}
         </div>
-        <div className="flex gap-3">
+        <div>
           <span>{t("Xavfsizlik sertifikatlangan")}</span>
-          <span>·</span>
-          <span>{t("Onlayn API")}</span>
         </div>
       </div>
     </div>

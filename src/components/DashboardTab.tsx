@@ -11,7 +11,6 @@ import {
   FolderOpen, 
   Layers, 
   Calendar, 
-  Search, 
   TrendingUp, 
   ArrowRight,
   Database,
@@ -95,7 +94,7 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
       </div>
 
       {/* 4.3.1. General Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
           {
             title: t("Hujjatlar"),
@@ -147,16 +146,6 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
             bgClass: "bg-teal-50/40",
             borderColor: "border-teal-100 hover:border-teal-400",
             highlight: counters.bugunQabulQilingan > 0
-          },
-          {
-            title: t("Bugun Qidiruv"),
-            value: counters.bugunQidiruvlar,
-            desc: t("Xodimlar tomonidan amalga oshirilgan qidiruvlar"),
-            icon: Search,
-            colorClass: "text-purple-600",
-            iconColor: "text-purple-500",
-            bgClass: "bg-purple-50/30",
-            borderColor: "border-purple-100 hover:border-purple-400"
           }
         ].map((card, idx) => {
           const Icon = card.icon;
@@ -339,7 +328,7 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
           <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-slate-800 flex items-center gap-2">
             <Database className="w-4 h-4" /> {t("SO'NGGI QABUL QILINGAN HUJJATLAR")}
           </h3>
-          <span className="font-mono text-xs text-neutral-500">{t("oxirgi 15 ta")}</span>
+          <span className="font-mono text-xs text-neutral-500">{t("oxirgi 10 ta")}</span>
         </div>
 
         <div className="overflow-x-auto">

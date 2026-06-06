@@ -54,21 +54,11 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
   const [editFileError, setEditFileError] = useState("");
   const [statusNotesAdd, setStatusNotesAdd] = useState(""); // notes when given out ("Kimga berildi" details)
 
-  const [filterCat, setFilterCat] = useState("");
-  const [filterCab, setFilterCab] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-
   const loadRepository = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.getDocuments({
-        q: searchQuery,
-        categoryId: filterCat,
-        cabinetId: filterCab,
-        status: filterStatus
-      });
+      const res = await api.getDocuments({ limit: 100 });
       setDocuments(res.documents);
     } catch (err: any) {
       setError(err.message || t("Arxiv ro'yxatini yuklashda xatolik yuz berdi"));
@@ -90,13 +80,7 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
     };
     bootstrapData();
     loadRepository();
-  }, [filterCat, filterCab, filterStatus]);
-
-  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      loadRepository();
-    }
-  };
+  }, []);
 
   // Populate Edit Fields on select
   const handleOpenEdit = (doc: any) => {
@@ -254,64 +238,6 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
         </p>
       </div>
 
-      {/* Lookup controls */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-neutral-50 p-4 border border-neutral-200">
-        <div className="flex-1 flex gap-2">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearchKeyPress}
-            placeholder={t("O'quvchi ismi yoki kodi bilan qidiring...")}
-            className="flex-1 bg-white border border-neutral-300 px-3 py-1.5 text-xs focus:border-slate-200"
-          />
-          <button
-            onClick={loadRepository}
-            className="btn-primary !py-1.5 !px-4 !text-xs shrink-0"
-          >
-            {t("Qidiruv")}
-          </button>
-        </div>
-
-        <div className="flex flex-wrap gap-2 text-xs">
-          {/* Category drop */}
-          <select 
-            value={filterCat} 
-            onChange={(e) => setFilterCat(e.target.value)}
-            className="bg-white border border-neutral-300 px-2 py-1.5 cursor-pointer"
-          >
-            <option value="">{t("Barcha Kategoriyalar")}</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id}>{t(c.name)}</option>
-            ))}
-          </select>
-
-          {/* Cabinet drop */}
-          <select 
-            value={filterCab} 
-            onChange={(e) => setFilterCab(e.target.value)}
-            className="bg-white border border-neutral-300 px-2 py-1.5 cursor-pointer"
-          >
-            <option value="">{t("Barcha Shkaflar")}</option>
-            {cabinets.map(c => (
-              <option key={c.id} value={c.id}>{t(c.name)}</option>
-            ))}
-          </select>
-
-          {/* Status drop */}
-          <select 
-            value={filterStatus} 
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-white border border-neutral-300 px-2 py-1.5 cursor-pointer"
-          >
-            <option value="">{t("Barcha Holatlar")}</option>
-            <option value="Joyida">{t("Joyida")}</option>
-            <option value="Berilgan">{t("Berilgan")}</option>
-            <option value="Yo'q qilingan">{t("Yo'q qilingan")}</option>
-          </select>
-        </div>
-      </div>
-
       {loading && (
         <div className="py-24 text-center">
           <div className="w-6 h-6 border border-slate-200 border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -325,38 +251,25 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
           <table className="data-table w-full text-left border-collapse bg-white text-sm">
             <thead>
               <tr className="bg-primary-900 text-white text-xs font-semibold">
-                <th className="py-2.5 px-3">{t("O'quvchi (Talaba)")}</th>
+                <th className="py-2.5 px-3">{t("Hujjat nomi")}</th>
                 <th className="py-2.5 px-3">{t("Hujjat kategoriyasi")}</th>
                 <th className="py-2.5 px-3">{t("Fizik Shkaf")} & {t("Qavat (Plast)")}</th>
                 <th className="py-2.5 px-3">{t("Qabul qilingan sana")}</th>
-                <th className="py-2.5 px-3">{t("Holati")}</th>
                 <th className="py-2.5 px-3 text-right">{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200 text-xs">
-              {documents.map((doc) => {
-                const stdName = doc.student ? `${doc.student.lastName} ${doc.student.firstName}` : doc.employee ? `${doc.employee.lastName} ${doc.employee.firstName}` : t("Noma'lum");
-                return (
+              {documents.map((doc) => (
                   <tr key={doc.id} className="hover:bg-neutral-50 font-sans">
                     <td className="py-2.5 px-3">
-                      <div className="font-semibold text-slate-800">{stdName}</div>
-                      <div className="text-[10px] text-neutral-400 font-mono font-medium">{doc.student?.studentId || doc.employee?.employeeId || t("Kodsiz")} &middot; {doc.student?.groupName || doc.employee?.department || t("O'quvsiz")}</div>
+                      <div className="font-semibold text-slate-800">{doc.docName || "—"}</div>
                     </td>
-                    <td className="py-2.5 px-3 text-neutral-700">{t(doc.category?.name) || t("Kategoriya kiritilmagan")}</td>
+                    <td className="py-2.5 px-3 text-neutral-700">{doc.category?.name ? t(doc.category.name) : t("Kategoriya kiritilmagan")}</td>
                     <td className="py-2.5 px-3 font-mono">
-                      {t(doc.cabinet?.name) || doc.cabinetId}, <strong className="text-slate-800">{doc.floor}-{t("qavat")}</strong>
+                      {doc.cabinet?.name ? t(doc.cabinet.name) : doc.cabinetId}, <strong className="text-slate-800">{doc.floor}-{t("qavat")}</strong>
                     </td>
                     <td className="py-2.5 px-3 font-mono text-neutral-500">
-                      {new Date(doc.receivedAt).toLocaleDateString("uz-UZ")}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      {doc.status === DocumentStatus.JOYIDA ? (
-                        <span className="border border-slate-200 px-1.5 py-0.5 text-[9px] font-mono uppercase bg-primary-600 text-white font-bold">{t("Joyida")}</span>
-                      ) : doc.status === DocumentStatus.BERILGAN ? (
-                        <span className="border border-neutral-300 px-1.5 py-0.5 text-[9px] font-mono uppercase bg-neutral-100 text-neutral-500 font-bold" title={t("Hujjat talabaga berilgan")}>{t("Chiqarilgan")}</span>
-                      ) : (
-                        <span className="border border-dashed border-red-200 px-1.5 py-0.5 text-[9px] font-mono uppercase text-red-500 bg-red-50 font-bold">{t("Yo'q qilingan")}</span>
-                      )}
+                      {doc.receivedAt ? new Date(doc.receivedAt).toLocaleDateString("uz-UZ") : "—"}
                     </td>
                     <td className="py-2.5 px-3 text-right">
                       {/* Only staff or admin can modify/delete */}
@@ -387,11 +300,10 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
                       </div>
                     </td>
                   </tr>
-                );
-              })}
+              ))}
               {documents.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-neutral-400 font-mono uppercase">
+                  <td colSpan={5} className="text-center py-12 text-neutral-400 font-mono uppercase">
                     {t("Hujjatlar topilmadi.")}
                   </td>
                 </tr>
