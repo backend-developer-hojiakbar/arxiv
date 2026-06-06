@@ -1,0 +1,6 @@
+{
+  "name": "Institut Arxivi Boshqaruvi",
+  "description": "Institut arxivi hujjatlarini boshqarish, fizik joylashuvini qidirish va qabul qilish tizimi",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

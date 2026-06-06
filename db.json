@@ -1,0 +1,239 @@
+{
+  "users": [
+    {
+      "id": "u-1",
+      "username": "admin",
+      "passwordHash": "admin123",
+      "fullName": "Fayzullayev Alisher Alimovich",
+      "role": "admin",
+      "isActive": true,
+      "createdAt": "2026-01-15T09:00:00.000Z",
+      "lastLoginAt": "2026-06-05T13:01:54.658Z"
+    },
+    {
+      "id": "u-2",
+      "username": "xodim",
+      "passwordHash": "xodim123",
+      "fullName": "Soliqova Dilfuza Rustamovna",
+      "role": "xodim",
+      "isActive": true,
+      "createdAt": "2026-01-20T10:30:00.000Z"
+    },
+    {
+      "id": "u-3",
+      "username": "viewer",
+      "passwordHash": "viewer123",
+      "fullName": "Usmonov Bahodir Shavkatovich",
+      "role": "viewer",
+      "isActive": true,
+      "createdAt": "2026-02-01T14:00:00.000Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-institut",
+      "name": "Institut",
+      "description": "Institut bo'linmalari va ma'muriy-tashkiliy farmon hamda buyruqlari",
+      "isActive": true,
+      "createdAt": "2026-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "cat-xodim",
+      "name": "Xodim",
+      "description": "Institut professor-o'qituvchilari hamda yordamchi xodimlarining shaxsiy jildlari",
+      "isActive": true,
+      "createdAt": "2026-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "cat-talaba",
+      "name": "Talaba",
+      "description": "Talabalarning reyting daftarchalari, diplom ilovalari, tavsiyanoma va shaxsiy hujjatlari",
+      "isActive": true,
+      "createdAt": "2026-01-02T09:00:00.000Z"
+    }
+  ],
+  "cabinets": [
+    {
+      "id": "cab-1",
+      "name": "1-shkaf",
+      "description": "Asosiy bino, 2-qavat dekarativ metall stellajlar, o'ng tomon",
+      "maxFloor": 9,
+      "isActive": true,
+      "createdAt": "2026-01-01T08:00:00.000Z"
+    },
+    {
+      "id": "cab-2",
+      "name": "2-shkaf",
+      "description": "Bosh arxiv zali, chap devor bo'yidagi yog'och stellaj",
+      "maxFloor": 6,
+      "isActive": true,
+      "createdAt": "2026-01-01T08:00:00.000Z"
+    },
+    {
+      "id": "cab-3",
+      "name": "3-shkaf",
+      "description": "Arxiv ichki omborxonasi, maxsus yong'inga chidamli seyf-shkaf",
+      "maxFloor": 12,
+      "isActive": true,
+      "createdAt": "2026-01-01T08:00:00.000Z"
+    }
+  ],
+  "students": [
+    {
+      "id": "std-1",
+      "lastName": "Abduvahobov",
+      "firstName": "Shirinbek",
+      "middleName": "Karimovich",
+      "studentId": "HEMIS102938",
+      "groupName": "IF-20",
+      "birthDate": "2001-04-12",
+      "phone": "+998 90 123 45 67",
+      "createdAt": "2026-02-10T11:00:00.000Z",
+      "updatedAt": "2026-02-10T11:00:00.000Z"
+    },
+    {
+      "id": "std-2",
+      "lastName": "To'rayev",
+      "firstName": "Jasur",
+      "middleName": "Alisherovich",
+      "studentId": "HEMIS492019",
+      "groupName": "KI-21",
+      "birthDate": "2002-09-25",
+      "phone": "+998 99 987 65 43",
+      "createdAt": "2026-02-12T12:30:00.000Z",
+      "updatedAt": "2026-02-12T12:30:00.000Z"
+    },
+    {
+      "id": "std-3",
+      "lastName": "Qodirova",
+      "firstName": "Malika",
+      "middleName": "Rustamovna",
+      "studentId": "HEMIS837102",
+      "groupName": "DI-22",
+      "birthDate": "2003-01-18",
+      "phone": "+998 93 555 44 33",
+      "createdAt": "2026-02-15T15:20:00.000Z",
+      "updatedAt": "2026-02-15T15:20:00.000Z"
+    }
+  ],
+  "employees": [
+    {
+      "id": "emp-1",
+      "lastName": "Raimov",
+      "firstName": "Izzat",
+      "middleName": "Sardorovich",
+      "employeeId": "EMP-1029",
+      "department": "Kompyuter tizimlari dekanati",
+      "position": "Dekan o'rinbosari",
+      "phone": "+998 90 321 09 87",
+      "createdAt": "2026-02-12T10:00:00.000Z",
+      "updatedAt": "2026-02-12T10:00:00.000Z"
+    },
+    {
+      "id": "emp-2",
+      "lastName": "Ismoilova",
+      "firstName": "Dilorom",
+      "middleName": "Baxtiyorovna",
+      "employeeId": "EMP-2039",
+      "department": "Gumanitar fanlar kafedrasi",
+      "position": "Katta o'qituvchi",
+      "phone": "+998 99 777 55 44",
+      "createdAt": "2026-02-14T11:00:00.000Z",
+      "updatedAt": "2026-02-14T11:00:00.000Z"
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-1",
+      "studentId": "std-1",
+      "categoryId": "cat-talaba",
+      "docName": "Diplom ilovasi",
+      "docDate": "2026-02-11",
+      "personType": "student",
+      "cabinetId": "cab-1",
+      "floor": 3,
+      "filePath": "doc-1.pdf",
+      "fileSize": 15420,
+      "originalFilename": "Abduvahobov_Diplom_Ilova.pdf",
+      "status": "Joyida",
+      "notes": "Orqa qatordagi ko'k jild ichida joylashgan",
+      "receivedAt": "2026-02-11T09:30:00.000Z",
+      "receivedByUserId": "u-2",
+      "createdAt": "2026-02-11T09:30:00.000Z",
+      "updatedAt": "2026-02-11T09:30:00.000Z"
+    },
+    {
+      "id": "doc-2",
+      "employeeId": "emp-1",
+      "categoryId": "cat-xodim",
+      "docName": "Shaxsiy jild buyrug'i",
+      "docDate": "2026-02-13",
+      "personType": "employee",
+      "cabinetId": "cab-2",
+      "floor": 5,
+      "filePath": "doc-2.pdf",
+      "fileSize": 16180,
+      "originalFilename": "Torayev_Akademik_M.pdf",
+      "status": "Joyida",
+      "notes": "Oq muqovali shaffof papka",
+      "receivedAt": "2026-02-13T14:15:00.000Z",
+      "receivedByUserId": "u-2",
+      "createdAt": "2026-02-13T14:15:00.000Z",
+      "updatedAt": "2026-02-13T14:15:00.000Z"
+    },
+    {
+      "id": "doc-3",
+      "studentId": "std-3",
+      "categoryId": "cat-talaba",
+      "docName": "Reyting daftarchasi",
+      "docDate": "2026-02-16",
+      "personType": "student",
+      "cabinetId": "cab-1",
+      "floor": 1,
+      "filePath": "doc-3.pdf",
+      "fileSize": 14900,
+      "originalFilename": "Qodirova_Reyting_Daftar.pdf",
+      "status": "Berilgan",
+      "notes": "Qaytarish muddati ko'rsatilmagan, vaqtinchalik olingan",
+      "receivedAt": "2026-02-16T10:00:00.000Z",
+      "receivedByUserId": "u-1",
+      "issuedAt": "2026-02-18T16:45:00.000Z",
+      "issuedByUserId": "u-2",
+      "createdAt": "2026-02-16T10:00:00.000Z",
+      "updatedAt": "2026-02-18T16:45:00.000Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "log-1780664514661u7uk",
+      "userId": "u-1",
+      "userFullName": "Fayzullayev Alisher Alimovich",
+      "action": "Tizimga muvaffaqiyatli kirdi (Login)",
+      "entityType": "Auth",
+      "entityId": "u-1",
+      "ip": "127.0.0.1",
+      "createdAt": "2026-06-05T13:01:54.661Z"
+    },
+    {
+      "id": "log-1780659624549r27h",
+      "userId": "u-1",
+      "userFullName": "Fayzullayev Alisher Alimovich",
+      "action": "Tizimga muvaffaqiyatli kirdi (Login)",
+      "entityType": "Auth",
+      "entityId": "u-1",
+      "ip": "127.0.0.1",
+      "createdAt": "2026-06-05T11:40:24.549Z"
+    },
+    {
+      "id": "log-1",
+      "userId": "u-1",
+      "userFullName": "Fayzullayev Alisher Alimovich",
+      "action": "Tizim ishga tushirildi",
+      "entityType": "System",
+      "entityId": "system",
+      "payloadJson": "{\"message\":\"Initsializatsiya\"}",
+      "ip": "127.0.0.1",
+      "createdAt": "2026-02-10T08:00:00.000Z"
+    }
+  ]
+}
