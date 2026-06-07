@@ -14,13 +14,17 @@ import {
   CheckCircle, 
   ChevronRight, 
   ChevronLeft, 
-  Plus, 
   AlertTriangle,
   Users,
-  Eye
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
+
+const inputClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-primary-500";
+const selectClass = `${inputClass} cursor-pointer`;
+const modeBtnActive = "rounded-md bg-primary-600 text-white shadow-sm";
+const modeBtnIdle = "rounded-md text-slate-600 hover:bg-white";
 
 interface IntakeTabProps {
   onNavigateToTab: (tab: string) => void;
@@ -361,7 +365,7 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
     return [
       { num: 1, label: t("Kategoriya tanlash"), icon: FolderPlus, desc: t("Soha bo'limini tanlang") },
       { num: 2, label: t(secondStepLabel), icon: UserPlus, desc: t(secondStepDesc) },
-      { num: 3, label: t("PDF nusxasi"), icon: FileUp, desc: t("Maksimal hajm: 20 MB (.pdf)") },
+      { num: 3, label: t("PDF nusxasi"), icon: FileUp, desc: t("Maksimal hajm: 30 MB (.pdf)") },
       { num: 4, label: t("Arxiv joylashuvi"), icon: MapIcon, desc: t("Shkaf va Tokcha (Tok)") },
       { num: 5, label: t("Xulosa va saqlash"), icon: CheckCircle, desc: t("Yakuniy ma'lumotlarni tahlil qilish") }
     ];
@@ -404,101 +408,102 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
   };
 
   return (
-    <div className="space-y-6 selection:bg-primary-600 selection:text-white">
-      {/* Header */}
-      <div className="border-b border-primary-100 pb-4">
-        <h2 className="text-xl page-title">
-          {t("Yangi Hujjat Qabul Qilish (Intake)")}
-        </h2>
-        <p className="text-sm text-neutral-500 mt-0.5">
+    <div className="space-y-8 selection:bg-primary-100 selection:text-primary-900">
+      <div className="page-header">
+        <h2 className="page-title">{t("Yangi Hujjat Qabul Qilish (Intake)")}</h2>
+        <p className="page-subtitle">
           {t("Kompleks o'quvchi ma'lumotlari, PDF yuklash va fizik saqlash koordinatalarini ro'yxatga olish")}
         </p>
       </div>
 
       {success ? (
-        /* Success Screen */
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="max-w-xl mx-auto border border-primary-100 p-8 text-center space-y-6 bg-white rounded-2xl shadow-xl shadow-indigo-100/10"
+          className="card mx-auto max-w-lg space-y-6 p-8 text-center"
         >
           <div className="flex justify-center">
-            <CheckCircle className="w-16 h-16 text-emerald-500" />
+            <CheckCircle className="h-14 w-14 text-emerald-500" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-2xl page-title">HUJJAT QABUL QILINDI!</h3>
-            <p className="text-sm text-neutral-500 leading-relaxed max-w-sm mx-auto">
-              Hujjat arxiv bazasiga muvaffaqiyatli saqlanib, fizik saqlash joylashuvi koordinatalariga bog'landi.
+            <h3 className="text-xl font-semibold text-slate-800">{t("Hujjat qabul qilindi")}</h3>
+            <p className="mx-auto max-w-sm text-sm text-slate-500">
+              {t("Hujjat arxiv bazasiga saqlanib, fizik joylashuv bilan bog'landi.")}
             </p>
           </div>
-          <div className="pt-4 flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleResetForm}
-              className="flex-1 border border-indigo-200 bg-white hover:bg-indigo-50/20 text-indigo-700 py-3 px-4 font-mono text-xs uppercase font-bold text-center tracking-wider rounded-lg transition-all cursor-pointer"
-            >
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+            <button type="button" onClick={handleResetForm} className="btn-secondary flex-1">
               {t("Yangi hujjat kiritish")}
             </button>
-            <button
-              onClick={() => onNavigateToTab("search")}
-              className="flex-1 bg-primary-600 text-white hover:bg-primary-700 py-3 px-4 font-mono text-xs uppercase font-bold text-center tracking-wider rounded-lg transition-all shadow-md shadow-indigo-100/40 cursor-pointer"
-            >
+            <button type="button" onClick={() => onNavigateToTab("search")} className="btn-primary flex-1">
               {t("Qidiruv tizimiga o'tish")}
             </button>
           </div>
         </motion.div>
       ) : (
-        /* Intake multi-step form */
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
-          {/* STAGES SIDE RAILS */}
-          <div className="lg:col-span-1 space-y-2.5">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+          <div className="space-y-2 lg:col-span-1">
             {getStepRailConfig().map((st) => {
-              const Icon = st.icon;
               const isActive = step === st.num;
               const isCompleted = step > st.num;
               return (
-                <div 
+                <div
                   key={st.num}
-                  className={`border p-3 flex items-start gap-3 transition-all rounded-lg ${isActive ? 'border-primary-600 bg-primary-600 text-white shadow-md shadow-indigo-100/50' : isCompleted ? 'border-emerald-100 bg-emerald-50/30 text-emerald-700' : 'border-neutral-200 bg-white text-neutral-400'}`}
+                  className={`card flex items-start gap-3 p-3 transition-all ${
+                    isActive
+                      ? "border-primary-300 bg-primary-50 ring-1 ring-primary-200"
+                      : isCompleted
+                        ? "border-emerald-200 bg-emerald-50/50"
+                        : "border-slate-200 bg-white opacity-80"
+                  }`}
                 >
-                  <div className={`w-6 h-6 shrink-0 flex items-center justify-center font-mono text-xs font-bold rounded ${isActive ? 'bg-white text-indigo-700' : isCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-200 text-neutral-600'}`}>
-                    0{st.num}
+                  <div
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                      isActive
+                        ? "bg-primary-600 text-white"
+                        : isCompleted
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {st.num}
                   </div>
-                  <div className="space-y-0.5">
-                    <span className="block text-xs font-bold leading-normal uppercase">{st.label}</span>
-                    <span className={`block text-[9px] leading-none ${isActive ? 'text-neutral-300' : 'text-neutral-400'}`}>{st.desc}</span>
+                  <div className="min-w-0 space-y-0.5">
+                    <span
+                      className={`block text-sm font-medium leading-snug ${
+                        isActive ? "text-primary-900" : isCompleted ? "text-emerald-800" : "text-slate-500"
+                      }`}
+                    >
+                      {st.label}
+                    </span>
+                    <span className="block text-xs text-slate-400">{st.desc}</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* ACTIVE STEP CONTENT */}
-          <div className="lg:col-span-3 border border-primary-100 rounded-xl p-6 bg-white flex flex-col justify-between min-h-[420px] shadow-sm shadow-indigo-100/10">
+          <div className="card flex min-h-[420px] flex-col justify-between p-6 lg:col-span-3">
             <div>
               {globalError && (
-                <div className="mb-4 border border-red-200 bg-red-50/50 p-3.5 text-xs font-sans font-medium flex items-start gap-2.5 rounded-lg">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                  <span className="text-red-850 text-plain">{globalError}</span>
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span className="text-plain">{globalError}</span>
                 </div>
               )}
 
               {/* STEP 1: CATEGORY SELECTION */}
               {step === 1 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                  <div className="flex justify-between items-center border-b border-primary-100/60 pb-2">
-                    <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-primary-900">
-                      {t("1-Bosqich: Hujjat Kategoriyasi Tanlash")}
-                    </h3>
-                    <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">{t("majburiy")}</span>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="card-section-title">{t("Kategoriya tanlash")}</h3>
+                    <span className="badge badge-neutral">{t("majburiy")}</span>
                   </div>
 
                   <div className="space-y-4">
                     <div className="space-y-3">
-                      <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold">
-                        {t("Kategoriyaniturni tanlang (*):")}
-                      </label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <p className="field-label">{t("Kategoriyaniturni tanlang (*):")}</p>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                         {(categories.filter((c) => c.isActive !== false).length > 0
                           ? categories.filter((c) => c.isActive !== false)
                           : []
@@ -508,16 +513,16 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                             <div 
                               key={cat.id}
                               onClick={() => setCategoryId(cat.id)}
-                              className={`border-2 p-4 cursor-pointer rounded-xl transition-all flex flex-col justify-between min-h-[140px] ${isSelected ? 'border-primary-600 bg-indigo-50/20 ring-2 ring-primary-500/15' : 'border-neutral-200 hover:border-primary-400 bg-white'}`}
+                              className={`flex min-h-[130px] cursor-pointer flex-col justify-between rounded-xl border-2 p-4 transition-all ${isSelected ? "border-primary-500 bg-primary-50/40 ring-2 ring-primary-200" : "border-slate-200 bg-white hover:border-primary-300"}`}
                             >
                               <div>
-                                <span className="block font-sans font-bold text-xs text-primary-900 uppercase tracking-wider">{t(cat.name)}</span>
-                                <span className="text-[10px] text-neutral-500 leading-normal mt-2.5 block">{t(cat.description) || t("Tavsif kiritilmagan")}</span>
+                                <span className="block text-sm font-semibold text-slate-800 text-plain">{t(cat.name)}</span>
+                                <span className="mt-2 block text-xs leading-relaxed text-slate-500">{t(cat.description) || t("Tavsif kiritilmagan")}</span>
                               </div>
-                              <div className="flex justify-between items-center mt-3 pt-3 border-t border-primary-100/40">
-                                <span className="text-[9px] font-mono uppercase tracking-widest text-neutral-400">{t("Tanlangan")}</span>
-                                <div className={`w-3.5 h-3.5 border rounded-full flex items-center justify-center ${isSelected ? 'border-primary-600 bg-primary-600' : 'border-neutral-300'}`}>
-                                  {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
+                              <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                                <span className="text-xs text-slate-400">{isSelected ? t("Tanlangan") : t("Tanlash")}</span>
+                                <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${isSelected ? "border-primary-600 bg-primary-600" : "border-slate-300"}`}>
+                                  {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                                 </div>
                               </div>
                             </div>
@@ -536,72 +541,66 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                   {/* Category = Institut yoki Talaba */}
                   {(flowType === "institut" || flowType === "student") && (
                     <div className="space-y-5">
-                      <div className="flex justify-between items-center border-b border-primary-100/60 pb-2">
-                        <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-primary-900">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 className="card-section-title">
                           {flowType === "student"
-                            ? t("2-Bosqich: Hujjat ma'lumotlari (Talaba)")
-                            : t("2-Bosqich: Hujjat ma'lumotlari (Institut)")}
+                            ? t("Hujjat va talaba ma'lumotlari")
+                            : t("Hujjat ma'lumotlari")}
                         </h3>
-                        <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">{t("majburiy")}</span>
+                        <span className="badge badge-neutral">{t("majburiy")}</span>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-5">
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
-                          <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 mb-1.5 font-semibold">
-                            {t("Hujjat nomi yoki raqamini kiriting (*)")}
-                          </label>
+                          <label className="field-label">{t("Hujjat nomi yoki raqamini kiriting (*)")}</label>
                           <input
                             type="text"
                             required
                             value={docName}
                             onChange={(e) => setDocName(e.target.value)}
                             placeholder={t("Masalan: Bo'yruq № 312 yoki Nizom")}
-                            className="w-full bg-white border border-neutral-300 px-3.5 py-2 text-sm rounded-lg focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                            className={inputClass}
                           />
                         </div>
 
                         <div>
-                          <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 mb-1.5 font-semibold">
-                            Chiqarilgan sanasini kiriting (*)
-                          </label>
+                          <label className="field-label">{t("Chiqarilgan sanasi")} (*)</label>
                           <input
                             type="date"
                             required
                             value={docDate}
                             onChange={(e) => setDocDate(e.target.value)}
-                            className="w-full bg-white border border-neutral-300 px-3.5 py-2 text-sm rounded-lg focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                            className={inputClass}
                           />
                         </div>
                       </div>
 
                       {flowType === "student" && (
-                        <div className="space-y-4 border-t border-neutral-200/60 pt-4">
-                          <div className="grid grid-cols-2 gap-4 border border-primary-100 p-1 bg-indigo-50/20 rounded-lg">
+                        <div className="space-y-4 border-t border-slate-100 pt-4">
+                          <div className="grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
                             <button
                               type="button"
                               onClick={() => setStudentMode("existing")}
-                              className={`py-2 px-3 tracking-wider font-mono text-xs uppercase font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all rounded ${studentMode === "existing" ? "bg-primary-600 text-white shadow-sm" : "text-indigo-700 hover:bg-indigo-50/40"}`}
+                              className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${studentMode === "existing" ? modeBtnActive : modeBtnIdle}`}
                             >
-                              <Users className="w-3.5 h-3.5" /> {t("Mavjud talabani tanlash")}
+                              <Users className="h-3.5 w-3.5" /> {t("Mavjud talabani tanlash")}
                             </button>
                             <button
                               type="button"
                               onClick={() => setStudentMode("new")}
-                              className={`py-2 px-3 tracking-wider font-mono text-xs uppercase font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all rounded ${studentMode === "new" ? "bg-primary-600 text-white shadow-sm" : "text-indigo-700 hover:bg-indigo-50/40"}`}
+                              className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${studentMode === "new" ? modeBtnActive : modeBtnIdle}`}
                             >
-                              <UserPlus className="w-3.5 h-3.5" /> {t("Yangi talaba qo'shish")}
+                              <UserPlus className="h-3.5 w-3.5" /> {t("Yangi talaba qo'shish")}
                             </button>
                           </div>
 
                           {studentMode === "existing" ? (
                             <div>
-                              <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold mb-1">
-                                {t("Arxivdagi talabalar ro'yxatidan tanlang (*)")}
-                              </label>
+                              <label className="field-label">{t("Arxivdagi talabalar ro'yxatidan tanlang (*)")}</label>
                               <select
                                 value={selectedStudentId}
                                 onChange={(e) => setSelectedStudentId(e.target.value)}
-                                className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded-lg focus:border-primary-600 outline-none cursor-pointer"
+                                className={selectClass}
                               >
                                 <option value="">{t("-- Talabani tanlang --")}</option>
                                 {existingStudents.map((std) => (
@@ -612,26 +611,26 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                               </select>
                             </div>
                           ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-indigo-50/40 p-4 bg-indigo-50/10 rounded-xl">
+                            <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 md:grid-cols-2">
                               <div>
-                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">{t("Familiyasi (*)")}</label>
-                                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                                <label className="field-label">{t("Familiyasi (*)")}</label>
+                                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputClass} />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">{t("Ismi (*)")}</label>
-                                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                                <label className="field-label">{t("Ismi (*)")}</label>
+                                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">{t("Otasining ismi")}</label>
-                                <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                                <label className="field-label">{t("Otasining ismi")}</label>
+                                <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className={inputClass} />
                               </div>
                               <div>
-                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">{t("Student ID (HEMIS)")}</label>
-                                <input type="text" value={studentRegId} onChange={(e) => setStudentRegId(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                                <label className="field-label">{t("Student ID (HEMIS)")}</label>
+                                <input type="text" value={studentRegId} onChange={(e) => setStudentRegId(e.target.value)} className={inputClass} />
                               </div>
                               <div className="md:col-span-2">
-                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">{t("Akademik guruh")}</label>
-                                <input type="text" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                                <label className="field-label">{t("Akademik guruh")}</label>
+                                <input type="text" value={groupName} onChange={(e) => setGroupName(e.target.value)} className={inputClass} />
                               </div>
                             </div>
                           )}
@@ -643,40 +642,35 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                   {/* Category = Xodim */}
                   {flowType === "employee" && (
                     <div className="space-y-5">
-                      <div className="flex justify-between items-center border-b border-primary-100/60 pb-2">
-                        <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-primary-900">
-                          {t("2-Bosqich: Xodim hamda hujjat ma'lumotlari")}
-                        </h3>
-                        <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">{t("majburiy")}</span>
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 className="card-section-title">{t("Hujjat va xodim ma'lumotlari")}</h3>
+                        <span className="badge badge-neutral">{t("majburiy")}</span>
                       </div>
 
-                      {/* Mode Selector */}
-                      <div className="grid grid-cols-2 gap-4 border border-primary-100 p-1 bg-indigo-50/20 rounded-lg">
+                      <div className="grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
                         <button
                           type="button"
                           onClick={() => setEmployeeMode("existing")}
-                          className={`py-2 px-3 tracking-wider font-mono text-xs uppercase font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all rounded ${employeeMode === "existing" ? "bg-primary-600 text-white shadow-sm" : "text-indigo-700 hover:bg-indigo-50/40"}`}
+                          className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${employeeMode === "existing" ? modeBtnActive : modeBtnIdle}`}
                         >
-                          <Users className="w-3.5 h-3.5" /> {t("Mavjud xodimni qidirish")}
+                          <Users className="h-3.5 w-3.5" /> {t("Mavjud xodimni qidirish")}
                         </button>
                         <button
                           type="button"
                           onClick={() => setEmployeeMode("new")}
-                          className={`py-2 px-3 tracking-wider font-mono text-xs uppercase font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all rounded ${employeeMode === "new" ? "bg-primary-600 text-white shadow-sm" : "text-indigo-700 hover:bg-indigo-50/40"}`}
+                          className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-all ${employeeMode === "new" ? modeBtnActive : modeBtnIdle}`}
                         >
-                          <UserPlus className="w-3.5 h-3.5" /> {t("Yangi xodim qo'shish")}
+                          <UserPlus className="h-3.5 w-3.5" /> {t("Yangi xodim qo'shish")}
                         </button>
                       </div>
 
                       {employeeMode === "existing" ? (
-                        <div className="space-y-3.5">
-                          <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold mb-1">
-                            {t("Arxivdagi xodimlar ro'yxatidan tanlang (*)")}
-                          </label>
+                        <div>
+                          <label className="field-label">{t("Arxivdagi xodimlar ro'yxatidan tanlang (*)")}</label>
                           <select
                             value={selectedEmployeeId}
                             onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                            className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded-lg focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all cursor-pointer"
+                            className={selectClass}
                           >
                             <option value="">{t("-- Xodimni tanlang --")}</option>
                             {existingEmployees.map((emp) => (
@@ -688,122 +682,103 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                         </div>
                       ) : (
                         /* New Employee Form */
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-indigo-50/40 p-4 bg-indigo-50/10 rounded-xl">
-                          <div className="md:col-span-2 font-mono text-[10px] text-indigo-700 uppercase font-bold">
+                        <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 md:grid-cols-2">
+                          <div className="md:col-span-2 text-sm font-medium text-slate-700">
                             {t("Yangi xodim ma'lumotlari:")}
                           </div>
                           <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">
-                              {t("Familiyasi (*)")}
-                            </label>
+                            <label className="field-label">{t("Familiyasi (*)")}</label>
                             <input
                               type="text"
                               value={employeeLastName}
                               onChange={(e) => setEmployeeLastName(e.target.value)}
                               placeholder={t("Familiyasi")}
-                              className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                              className={inputClass}
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">
-                              {t("Ismi (*)")}
-                            </label>
+                            <label className="field-label">{t("Ismi (*)")}</label>
                             <input
                               type="text"
                               value={employeeFirstName}
                               onChange={(e) => setEmployeeFirstName(e.target.value)}
                               placeholder={t("Ismi")}
-                              className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                              className={inputClass}
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                              Otasining ismi
-                            </label>
+                            <label className="field-label">{t("Otasining ismi")}</label>
                             <input
                               type="text"
                               value={employeeMiddleName}
                               onChange={(e) => setEmployeeMiddleName(e.target.value)}
-                              placeholder="Otasining ismi"
-                              className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                              placeholder={t("Otasining ismi")}
+                              className={inputClass}
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                              {t("Tababel raqami / ID")}
-                            </label>
+                            <label className="field-label">{t("Tababel raqami / ID")}</label>
                             <input
                               type="text"
                               value={employeeRegId}
                               onChange={(e) => setEmployeeRegId(e.target.value)}
                               placeholder={t("Masalan: T-4190")}
-                              className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                              className={inputClass}
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                              {t("Kafedrasi / Bo'limi")}
-                            </label>
+                            <label className="field-label">{t("Kafedrasi / Bo'limi")}</label>
                             <input
                               type="text"
                               value={employeeDepartment}
                               onChange={(e) => setEmployeeDepartment(e.target.value)}
                               placeholder={t("Fizika kafedrasi")}
-                              className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                              className={inputClass}
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                              Lavozimi
-                            </label>
+                            <label className="field-label">{t("Lavozimi")}</label>
                             <input
                               type="text"
                               value={employeePosition}
                               onChange={(e) => setEmployeePosition(e.target.value)}
-                              placeholder="Katta o'qituvchi"
-                              className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                              placeholder={t("Katta o'qituvchi")}
+                              className={inputClass}
                             />
                           </div>
                           <div className="md:col-span-2">
-                            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                              {t("Telefon raqami")}
-                            </label>
+                            <label className="field-label">{t("Telefon raqami")}</label>
                             <input
                               type="text"
                               value={employeePhone}
                               onChange={(e) => setEmployeePhone(e.target.value)}
                               placeholder="+998 90..."
-                              className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-mono"
+                              className={`${inputClass} font-mono-normal`}
                             />
                           </div>
                         </div>
                       )}
 
-                      {/* Employee Document details fields */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-neutral-200/60 pt-4">
-                        <div className="md:col-span-2">
-                          <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 mb-1.5 font-semibold">
-                            {t("Hujjat nomi yoki raqamini kiriting (*)")}
-                          </label>
+                      <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4">
+                        <div>
+                          <label className="field-label">{t("Hujjat nomi yoki raqamini kiriting (*)")}</label>
                           <input
                             type="text"
                             required
                             value={docName}
                             onChange={(e) => setDocName(e.target.value)}
                             placeholder={t("Hujjat nomi yoki uning tartib raqami")}
-                            className="w-full bg-white border border-neutral-300 px-3.5 py-2 text-sm rounded-lg focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                            className={inputClass}
                           />
                         </div>
-                        <div className="md:col-span-2">
-                          <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 mb-1.5 font-semibold">
-                            Chiqarilgan sanasi (Joriy etilgan) (*)
-                          </label>
+                        <div>
+                          <label className="field-label">{t("Chiqarilgan sanasi")} (*)</label>
                           <input
                             type="date"
                             required
                             value={docDate}
                             onChange={(e) => setDocDate(e.target.value)}
-                            className="w-full bg-white border border-neutral-300 px-3.5 py-2 text-sm rounded-lg focus:border-primary-600 outline-none focus:ring-1 focus:ring-indigo-100 transition-all font-sans"
+                            className={inputClass}
                           />
                         </div>
                       </div>
@@ -816,17 +791,17 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
               {/* STEP 3: PDF FILE UPLOAD */}
               {step === 3 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                  <div className="flex justify-between items-center border-b border-primary-100/60 pb-2">
-                    <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-primary-900">
-                      {t("3-Bosqich: Elektron PDF hujjati yuklash")}
-                    </h3>
-                    <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">{t("majburiy")}</span>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="card-section-title">{t("PDF nusxasi yuklash")}</h3>
+                    <span className="badge badge-neutral">{t("majburiy")}</span>
                   </div>
 
-                  {fileError && <p className="text-xs text-red-600 font-semibold bg-red-50 p-2.5 border border-red-200 rounded">{t(fileError)}</p>}
+                  {fileError && (
+                    <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{t(fileError)}</p>
+                  )}
 
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-indigo-200 hover:border-primary-400 p-8 bg-slate-50/50 hover:bg-indigo-50/10 text-center cursor-pointer transition-all rounded-xl relative">
+                    <div className="relative cursor-pointer rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center transition-all hover:border-primary-400 hover:bg-primary-50/30">
                       <input 
                         type="file" 
                         accept=".pdf"
@@ -835,30 +810,27 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                         title={t("Hujjatni bu yerga bosing yoki sudrab keling")}
                       />
                       <div className="space-y-2">
-                        <FileUp className="w-10 h-10 text-indigo-400 mx-auto animate-bounce-subtle" />
-                        <p className="text-sm font-sans font-bold text-primary-900">{t("Faylni tanlash yoki sudrab yuklash")}</p>
-                        <p className="text-[10px] text-neutral-400 font-mono uppercase tracking-widest">{t("Faqat .pdf formatida, maksimal 30 MB")}</p>
+                        <FileUp className="mx-auto h-10 w-10 text-primary-500" />
+                        <p className="text-sm font-medium text-slate-800">{t("Faylni tanlash yoki sudrab yuklash")}</p>
+                        <p className="text-xs text-slate-500">{t("Faqat .pdf formatida, maksimal 30 MB")}</p>
                       </div>
                     </div>
 
                     {file && (
-                      <div className="border border-primary-100 rounded-lg p-4 space-y-2 bg-indigo-50/10">
-                        <div className="flex justify-between items-center text-xs font-mono">
-                          <span className="truncate max-w-xs font-bold text-primary-900">{file.name}</span>
-                          <span className="text-primary-600 font-bold">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                      <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="max-w-xs truncate font-medium text-slate-800">{file.name}</span>
+                          <span className="text-primary-600 font-medium">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
                         </div>
-                        
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                          <div 
-                            className="bg-primary-600 h-full transition-all duration-300"
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full bg-primary-600 transition-all duration-300"
                             style={{ width: `${uploadProgress}%` }}
-                          ></div>
+                          />
                         </div>
-
-                        <div className="flex justify-between text-[10px] font-mono uppercase text-neutral-400">
-                          <span>{t("Progress")}</span>
-                          <span className="text-primary-600 font-bold">{uploadProgress === 100 ? t("Tayyor (Base64 tayyorlangan)") : t("Bajarilmoqda...")}</span>
-                        </div>
+                        <p className="text-xs text-slate-500">
+                          {uploadProgress === 100 ? t("Tayyor (Base64 tayyorlangan)") : t("Bajarilmoqda...")}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -868,22 +840,18 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
               {/* STEP 4: PLACEMENT MAP */}
               {step === 4 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                  <div className="flex justify-between items-center border-b border-primary-100/60 pb-2">
-                    <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-primary-900">
-                      {t("4-Bosqich: Fizik saqlash joylashuvi (Koordinata)")}
-                    </h3>
-                    <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">{t("majburiy")}</span>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="card-section-title">{t("Arxiv joylashuvi")}</h3>
+                    <span className="badge badge-neutral">{t("majburiy")}</span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 mb-1.5 font-semibold">
-                        {t("Arxiv Shkafi (*)")}
-                      </label>
+                      <label className="field-label">{t("Arxiv Shkafi (*)")}</label>
                       <select
                         value={cabinetId}
                         onChange={(e) => { setCabinetId(e.target.value); setFloor(""); }}
-                        className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded focus:border-primary-600 outline-hidden focus:ring-1 focus:ring-indigo-100 transition-all cursor-pointer"
+                        className={selectClass}
                       >
                         <option value="">{t("-- Shkafni tanlang --")}</option>
                         {cabinets.filter((c) => c.isActive !== false).map((cab) => (
@@ -891,16 +859,14 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                         ))}
                       </select>
                       {selectedCabinet && (
-                        <p className="text-[10px] text-neutral-500 font-mono mt-1 italic">
-                          {t("Tavsif:")} {t(selectedCabinet.description) || "N/A"}
+                        <p className="mt-1 text-xs text-slate-500">
+                          {t("Tavsif:")} {t(selectedCabinet.description) || "—"}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 mb-1.5 font-bold">
-                        {t("Qavat raqami (Butun musbat son) (*)")}
-                      </label>
+                      <label className="field-label">{t("Qavat raqami")} (*)</label>
                       <input
                         type="number"
                         min="1"
@@ -909,26 +875,24 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                         onChange={(e) => setFloor(e.target.value === "" ? "" : Number(e.target.value))}
                         disabled={!cabinetId}
                         placeholder={selectedCabinet ? `${t("1 va")} ${selectedCabinet.maxFloor} ${t("oralig'ida")}` : t("Avvalo shkaf tanlang")}
-                        className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded focus:border-primary-600 outline-hidden focus:ring-1 focus:ring-indigo-100 transition-all font-mono normal-case disabled:bg-neutral-50"
+                        className={`${inputClass} font-mono-normal disabled:bg-slate-50`}
                       />
                       {selectedCabinet && (
-                        <p className="text-[10px] text-primary-600 font-bold uppercase tracking-wider font-mono mt-1">
-                          {t("Varaqa formati:")} «{t(selectedCabinet.name)}, {floor || "N"}-{t("qavat")}»
+                        <p className="mt-1 text-xs text-primary-600">
+                          {t(selectedCabinet.name)}, {floor || "—"}-{t("qavat")}
                         </p>
                       )}
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                        {t("Shkafdagi aniq joylashuv izohi (Ixtiyoriy)")}
-                      </label>
+                      <label className="field-label">{t("Shkafdagi aniq joylashuv izohi (Ixtiyoriy)")}</label>
                       <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder={t("Masalan: chap bo'lim orqa tomondagi ko'k jildli tezis jurnali")}
                         rows={3}
-                        className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded focus:border-primary-600 outline-hidden focus:ring-1 focus:ring-indigo-100 transition-all"
-                      ></textarea>
+                        className={inputClass}
+                      />
                     </div>
                   </div>
                 </motion.div>
@@ -986,15 +950,14 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
               )}
             </div>
 
-            {/* LOWER DIALOG BUTTONS CONTROL */}
-            <div className="border-t border-neutral-100 pt-4 flex justify-between gap-3 sticky bottom-0 bg-white">
+            <div className="sticky bottom-0 flex justify-between gap-3 border-t border-slate-100 bg-white pt-4">
               <button
                 type="button"
                 disabled={step === 1 || loading}
                 onClick={() => setStep(step - 1)}
-                className="px-4 py-2 border border-neutral-300 hover:border-indigo-500 rounded text-slate-700 font-mono text-xs uppercase font-bold flex items-center gap-1 cursor-pointer disabled:opacity-40 transition-all"
+                className="btn-secondary disabled:opacity-40"
               >
-                <ChevronLeft className="w-3.5 h-3.5" /> {t("Orqaga")}
+                <ChevronLeft className="h-4 w-4" /> {t("Orqaga")}
               </button>
 
               {step < 5 ? (
@@ -1002,26 +965,24 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                   type="button"
                   disabled={!isStepValid()}
                   onClick={() => setStep(step + 1)}
-                  className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 disabled:bg-slate-100 disabled:text-slate-400 font-mono text-xs uppercase font-bold flex items-center gap-1 cursor-pointer transition-all rounded"
+                  className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {t("Keyingisi")} <ChevronRight className="w-3.5 h-3.5" />
+                  {t("Keyingisi")} <ChevronRight className="h-4 w-4" />
                 </button>
               ) : (
                 <button
                   type="button"
                   disabled={loading}
                   onClick={handleIntakeSubmit}
-                  className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-mono text-xs uppercase font-black tracking-wider flex items-center gap-1.5 cursor-pointer disabled:bg-slate-100 disabled:text-slate-400 transition-all rounded shadow-md shadow-indigo-100/40"
+                  className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? (
                     <>
-                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       {t("Qabul qilinmoqda...")}
                     </>
                   ) : (
-                    <>
-                      {t("Arxivga Saqlash")}
-                    </>
+                    t("Arxivga Saqlash")
                   )}
                 </button>
               )}
