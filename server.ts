@@ -4,13 +4,21 @@
  */
 
 import express from "express";
+import fs from "fs";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { PORT, seedDatabaseIfNeeded } from "./serverDb.js";
 import { createV1Router } from "./v1Routes.js";
 
+function isProductionMode(): boolean {
+  if (process.env.NODE_ENV === "production") return true;
+  const distIndex = path.join(process.cwd(), "dist", "index.html");
+  return fs.existsSync(distIndex);
+}
+
 async function startServer() {
   const app = express();
+  const production = isProductionMode();
 
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
@@ -19,7 +27,7 @@ async function startServer() {
 
   app.use("/api/v1", createV1Router());
 
-  if (process.env.NODE_ENV !== "production") {
+  if (!production) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -34,7 +42,9 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server started and listening on http://0.0.0.0:${PORT}`);
+    console.log(
+      `Server started (${production ? "production" : "development"}) on http://0.0.0.0:${PORT}`
+    );
   });
 }
 

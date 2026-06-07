@@ -16,6 +16,7 @@ export default defineConfig(() => {
       },
     },
     server: {
+      allowedHosts: ["arxivfjsti.uz", "www.arxivfjsti.uz", "localhost"],
       proxy: {
         "/api/v1": {
           target: apiTarget,
