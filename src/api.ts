@@ -4,6 +4,7 @@
  */
 
 import {
+  getCategoryFlowType,
   mapAuditLog,
   mapCabinet,
   mapCategory,
@@ -322,14 +323,20 @@ export const api = {
       };
     });
 
+    const sumByCategoryFlow = (flow: "employee" | "student") =>
+      categoryStats
+        .filter((cat) => getCategoryFlowType(cat.id, categories) === flow)
+        .reduce((sum, cat) => sum + cat.count, 0);
+
     return {
       counters: {
         jamiHujjatlar: counters.total_documents ?? 0,
-        jamiOquvchilar: counters.total_unique_students ?? 0,
         jamiKategoriyalar: counters.total_categories ?? 0,
         jamiShkaflar: counters.total_cabinets ?? 0,
         bugunQabulQilingan: counters.today_added ?? 0,
         bugunQidiruvlar: counters.today_searches ?? 0,
+        xodimHujjatlari: sumByCategoryFlow("employee"),
+        talabaHujjatlari: sumByCategoryFlow("student"),
       },
       categoryStats,
       cabinetStats,

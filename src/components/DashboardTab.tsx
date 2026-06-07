@@ -13,7 +13,9 @@ import {
   TrendingUp, 
   ArrowRight,
   Database,
-  Grid
+  Grid,
+  User,
+  GraduationCap,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
@@ -91,7 +93,7 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
       </div>
 
       {/* 4.3.1. General Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
           {
             title: t("Hujjatlar"),
@@ -102,6 +104,26 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
             iconColor: "text-primary-500",
             bgClass: "bg-indigo-50/30",
             borderColor: "border-primary-100 hover:border-primary-400"
+          },
+          {
+            title: t("Xodim hujjatlari"),
+            value: counters.xodimHujjatlari ?? 0,
+            desc: t("Xodimga bog'langan hujjatlar"),
+            icon: User,
+            colorClass: "text-violet-600",
+            iconColor: "text-violet-500",
+            bgClass: "bg-violet-50/30",
+            borderColor: "border-violet-100 hover:border-violet-400"
+          },
+          {
+            title: t("Talaba hujjatlari"),
+            value: counters.talabaHujjatlari ?? 0,
+            desc: t("Talabaga bog'langan hujjatlar"),
+            icon: GraduationCap,
+            colorClass: "text-emerald-600",
+            iconColor: "text-emerald-500",
+            bgClass: "bg-emerald-50/30",
+            borderColor: "border-emerald-100 hover:border-emerald-400"
           },
           {
             title: t("Kategoriyalar"),

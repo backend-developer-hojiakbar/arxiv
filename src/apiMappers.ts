@@ -136,10 +136,22 @@ export function getCategoryFlowType(
   const cat = categories.find((c) => c.id === catId);
   if (!cat) return "institut";
   const name = cat.name.toLowerCase();
-  if (name.includes("talaba") || name.includes("o'quvchi") || name.includes("student")) {
+  if (
+    name.includes("talaba") ||
+    name.includes("талаба") ||
+    name.includes("o'quvchi") ||
+    name.includes("ўқувчи") ||
+    name.includes("student")
+  ) {
     return "student";
   }
-  if (name.includes("xodim") || name.includes("employee") || name.includes("o'qituvchi")) {
+  if (
+    name.includes("xodim") ||
+    name.includes("ходим") ||
+    name.includes("employee") ||
+    name.includes("o'qituvchi") ||
+    name.includes("ўқитувчи")
+  ) {
     return "employee";
   }
   return "institut";
