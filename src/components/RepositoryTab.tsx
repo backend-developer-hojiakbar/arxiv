@@ -29,9 +29,11 @@ const editInputClass =
 
 interface RepositoryTabProps {
   currentUser: any;
+  dataRevision?: number;
+  onDataChange?: () => void;
 }
 
-export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
+export default function RepositoryTab({ currentUser, dataRevision = 0, onDataChange }: RepositoryTabProps) {
   const { t } = useTranslation();
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,8 +67,8 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
   const [editFileError, setEditFileError] = useState("");
   const [statusNotesAdd, setStatusNotesAdd] = useState(""); // notes when given out ("Kimga berildi" details)
 
-  const loadRepository = async () => {
-    setLoading(true);
+  const loadRepository = async (background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
       const res = await api.getDocuments({ limit: 100 });
@@ -74,7 +76,7 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
     } catch (err: any) {
       setError(err.message || t("Arxiv ro'yxatini yuklashda xatolik yuz berdi"));
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
@@ -92,6 +94,12 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
     bootstrapData();
     loadRepository();
   }, []);
+
+  useEffect(() => {
+    if (dataRevision > 0) {
+      loadRepository(true);
+    }
+  }, [dataRevision]);
 
   // Populate Edit Fields on select
   const handleOpenEdit = async (doc: any) => {
@@ -204,8 +212,8 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
       }
 
       await api.updateDocument(editDoc.id, payload);
+      onDataChange?.();
       setEditDoc(null);
-      loadRepository();
     } catch (err: any) {
       alert(err.message || "Tahrirlashni saqlashda xatolik yuz berdi");
     } finally {
@@ -218,9 +226,9 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
     setLoading(true);
     try {
       await api.deleteDocument(id);
+      onDataChange?.();
       setConfirmDeleteId(null);
       setInspectDoc(null);
-      loadRepository();
     } catch (err: any) {
       alert(err.message || t("O'chirishda muammo sodir bo'ldi"));
     } finally {

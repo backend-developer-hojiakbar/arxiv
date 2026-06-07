@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import LoginScreen from "./components/LoginScreen.tsx";
 import Sidebar from "./components/Sidebar.tsx";
 import DashboardTab from "./components/DashboardTab.tsx";
@@ -68,8 +68,13 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>(getTabFromUrl);
   const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([getTabFromUrl()]));
   const [tabFilters, setTabFilters] = useState<any>(null);
+  const [dataRevision, setDataRevision] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const { lang, setLang, t } = useTranslation();
+
+  const notifyDataChange = useCallback(() => {
+    setDataRevision((v) => v + 1);
+  }, []);
 
   const isDocRole = currentUser?.role !== UserRole.VIEWER;
   const isAdmin = currentUser?.role === UserRole.ADMIN;
@@ -223,22 +228,32 @@ export default function App() {
             <div className="no-print">
               {visitedTabs.has("dashboard") && (
                 <TabPanel tabId="dashboard" activeTab={activeTab}>
-                  <DashboardTab onNavigateToTab={handleNavWithFilters} />
+                  <DashboardTab
+                    onNavigateToTab={handleNavWithFilters}
+                    dataRevision={dataRevision}
+                  />
                 </TabPanel>
               )}
               {visitedTabs.has("search") && (
                 <TabPanel tabId="search" activeTab={activeTab}>
-                  <SearchTab initialFilters={tabFilters} />
+                  <SearchTab initialFilters={tabFilters} dataRevision={dataRevision} />
                 </TabPanel>
               )}
               {isDocRole && visitedTabs.has("intake") && (
                 <TabPanel tabId="intake" activeTab={activeTab}>
-                  <IntakeTab onNavigateToTab={handleTabChange} />
+                  <IntakeTab
+                    onNavigateToTab={handleTabChange}
+                    onDataChange={notifyDataChange}
+                  />
                 </TabPanel>
               )}
               {visitedTabs.has("documents") && (
                 <TabPanel tabId="documents" activeTab={activeTab}>
-                  <RepositoryTab currentUser={currentUser} />
+                  <RepositoryTab
+                    currentUser={currentUser}
+                    dataRevision={dataRevision}
+                    onDataChange={notifyDataChange}
+                  />
                 </TabPanel>
               )}
               {isDocRole && visitedTabs.has("settings") && (

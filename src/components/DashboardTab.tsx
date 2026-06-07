@@ -21,33 +21,37 @@ import { useTranslation } from "./LanguageContext.tsx";
 
 interface DashboardTabProps {
   onNavigateToTab: (tab: string, filters?: any) => void;
+  dataRevision?: number;
 }
 
-export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
+export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: DashboardTabProps) {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  const fetchStats = async () => {
+  const fetchStats = async (background = false) => {
     try {
-      setLoading(true);
+      if (!background) setLoading(true);
       setError(null);
       const data = await api.getStats();
       setStats(data);
     } catch (err: any) {
       setError(err.message || t("Tahliliy ma'lumotlarni hisoblashda xatolik yuz berdi"));
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchStats();
-    // Auto refresh every 60 seconds as recommended in DASH-02
-    const interval = setInterval(fetchStats, 60000);
-    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (dataRevision > 0) {
+      fetchStats(true);
+    }
+  }, [dataRevision]);
 
   if (loading && !stats) {
     return (

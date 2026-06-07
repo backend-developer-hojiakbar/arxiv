@@ -23,9 +23,10 @@ import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
 
 interface SearchTabProps {
   initialFilters?: any;
+  dataRevision?: number;
 }
 
-export default function SearchTab({ initialFilters }: SearchTabProps) {
+export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTabProps) {
   // Query filters state
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -104,9 +105,15 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
     }
   }, [initialFilters]);
 
+  useEffect(() => {
+    if (dataRevision > 0) {
+      searchDocuments(undefined, true);
+    }
+  }, [dataRevision]);
+
   // Handle Search
-  const searchDocuments = async (overrideParams?: any) => {
-    setLoading(true);
+  const searchDocuments = async (overrideParams?: any, background = false) => {
+    if (!background) setLoading(true);
     setError(null);
     try {
       const filters = {
@@ -124,7 +131,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
     } catch (err: any) {
       setError(err.message || t("Hujjatlarni oqimlashda xatolik yuz berdi"));
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   };
 

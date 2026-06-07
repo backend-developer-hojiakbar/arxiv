@@ -24,9 +24,10 @@ import { useTranslation } from "./LanguageContext.tsx";
 
 interface IntakeTabProps {
   onNavigateToTab: (tab: string) => void;
+  onDataChange?: () => void;
 }
 
-export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
+export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -214,6 +215,7 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
         pdfBase64: !file && pdfBase64 ? pdfBase64 : undefined,
         pdfFilename: file?.name || "arxiv_hujjat.pdf",
       });
+      onDataChange?.();
       setSuccess(true);
     } catch (err: any) {
       setGlobalError(err.message || t("Hujjat qabul qilinishida xatolik yuz berdi"));
