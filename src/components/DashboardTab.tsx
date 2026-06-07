@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { 
   FileText, 
-  Users, 
   FolderOpen, 
   Layers, 
   Calendar, 
@@ -92,7 +91,7 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
       </div>
 
       {/* 4.3.1. General Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
             title: t("Hujjatlar"),
@@ -103,16 +102,6 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
             iconColor: "text-primary-500",
             bgClass: "bg-indigo-50/30",
             borderColor: "border-primary-100 hover:border-primary-400"
-          },
-          {
-            title: t("Bog'langan shaxslar"),
-            value: counters.jamiOquvchilar,
-            desc: t("Kamida bitta hujjati bor talabalar soni"),
-            icon: Users,
-            colorClass: "text-emerald-600",
-            iconColor: "text-emerald-500",
-            bgClass: "bg-emerald-50/30",
-            borderColor: "border-emerald-100 hover:border-emerald-400"
           },
           {
             title: t("Kategoriyalar"),
