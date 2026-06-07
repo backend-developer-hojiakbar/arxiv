@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { api, setAuthToken } from "../api.js";
+import { api } from "../api.js";
 import { LogIn, Languages } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
@@ -32,8 +32,6 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     try {
       const data = await api.login(username.trim(), password.trim());
-      setAuthToken(data.token);
-      localStorage.setItem("arxiv_user", JSON.stringify(data.user));
       onLoginSuccess(data.user);
     } catch (err: any) {
       setError(err.message || t("Tizimga kirishda xatolik yuz berdi"));
@@ -101,7 +99,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               className="mb-4 border border-red-200 bg-red-50 p-3 text-sm flex items-start gap-2 rounded-lg"
             >
               <span className="badge bg-red-600 text-white border-0 shrink-0">{t("Xato")}</span>
-              <span className="text-red-800 font-medium">{t(error)}</span>
+              <span className="text-red-800 font-medium text-plain">{error}</span>
             </motion.div>
           )}
 

@@ -64,7 +64,7 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
         <span className="badge bg-red-600 text-white border-0">{t("Xato")}</span>
         <p className="mt-3 text-sm text-slate-700">{t(error)}</p>
         <button onClick={fetchStats} className="btn-secondary mt-4">
-          {t("Formani tozalash")}
+          {t("Qayta yuklash")}
         </button>
       </div>
     );
@@ -78,19 +78,13 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
   return (
     <div className="space-y-8 selection:bg-primary-100 selection:text-primary-900">
       {/* Page Title Row */}
-      <div className="page-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <div>
-          <h2 className="page-title">
-            {t("Boshqaruv paneli (Dashboard)")}
-          </h2>
-          <p className="page-subtitle">
-            {t("Arxiv tizimining umumiy statistikasi va oxirgi faollik ko'rsatkichlari")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="badge badge-success">{t("REAL VAQTDA")}</span>
-        </div>
+      <div className="page-header">
+        <h2 className="page-title">
+          {t("Boshqaruv paneli (Dashboard)")}
+        </h2>
+        <p className="page-subtitle">
+          {t("Arxiv tizimining umumiy statistikasi va oxirgi faollik ko'rsatkichlari")}
+        </p>
       </div>
 
       {/* 4.3.1. General Statistics Cards */}
@@ -107,9 +101,9 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
             borderColor: "border-primary-100 hover:border-primary-400"
           },
           {
-            title: t("O'quvchilar"),
+            title: t("Bog'langan shaxslar"),
             value: counters.jamiOquvchilar,
-            desc: t("Kamida bitta hujjati bor talabalar jami soni"),
+            desc: t("Kamida bitta hujjati bor talabalar soni"),
             icon: Users,
             colorClass: "text-emerald-600",
             iconColor: "text-emerald-500",
@@ -193,7 +187,7 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
                 onClick={() => onNavigateToTab("search", { categoryId: cat.id })}
               >
                 <div className="flex justify-between text-xs font-mono font-medium mb-1">
-                  <span className="text-slate-800 group-hover:underline">{t(cat.name)}</span>
+                  <span className="text-slate-800 group-hover:underline text-plain">{cat.name}</span>
                   <span className="text-neutral-500">
                     {cat.count} {t("ta yozuv")} (<strong className="text-primary-600 font-bold">{cat.percent}%</strong>)
                   </span>
@@ -332,12 +326,12 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="data-table w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 font-mono text-[11px] uppercase text-neutral-500">
                 <th className="py-2.5 px-3">{t("Sana & Vaqt")}</th>
-                <th className="py-2.5 px-3">{t("O'quvchi F.I.Sh.")}</th>
-                <th className="py-2.5 px-3">{t("Hujjat kategoriyasi")}</th>
+                <th className="py-2.5 px-3">{t("Shaxs / Hujjat")}</th>
+                <th className="py-2.5 px-3">{t("Kategoriya")}</th>
                 <th className="py-2.5 px-3">{t("Fizik joylashuvi")}</th>
                 <th className="py-2.5 px-3">{t("Holati")}</th>
                 <th className="py-2.5 px-3 text-right">{t("Amal")}</th>
@@ -350,31 +344,48 @@ export default function DashboardTab({ onNavigateToTab }: DashboardTabProps) {
                   className="hover:bg-neutral-50 transition-colors cursor-pointer group"
                   onClick={() => onNavigateToTab("documents")}
                 >
-                  <td className="py-2.5 px-3 font-mono text-neutral-500">
-                    {new Date(doc.receivedAt).toLocaleString("uz-UZ", {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
+                  <td>
+                    <div className="table-cell-inner text-neutral-500">
+                      {new Date(doc.receivedAt).toLocaleString("uz-UZ", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </div>
                   </td>
-                  <td className="py-2.5 px-3 font-medium text-slate-800 group-hover:underline">
-                    {t(doc.studentName)}
+                  <td>
+                    <div className="table-cell-inner table-cell-inner--stack group-hover:underline">
+                      <div className="font-medium text-slate-800 text-plain">{doc.personName}</div>
+                      {doc.personSubtitle && (
+                        <div className="text-xs text-slate-500 text-plain">{doc.personSubtitle}</div>
+                      )}
+                    </div>
                   </td>
-                  <td className="py-2.5 px-3 text-neutral-600">
-                    {t(doc.categoryName)}
+                  <td>
+                    <div className="table-cell-inner text-neutral-600 text-plain">{doc.categoryName}</div>
                   </td>
-                  <td className="py-2.5 px-3 font-mono text-neutral-600">
-                    {t(doc.cabinetName)}, <strong className="text-slate-800">{doc.floor}-{t("qavat")}</strong>
+                  <td>
+                    <div className="table-cell-inner text-neutral-600 text-plain">
+                      {doc.cabinetName !== "—" ? (
+                        <><span className="font-medium">{doc.cabinetName}</span> · <strong className="text-slate-800">{doc.floor}-{t("qavat")}</strong></>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </div>
                   </td>
-                  <td className="py-2.5 px-3">
-                    <span className={`inline-block border px-1.5 py-0.5 text-[10px] font-mono uppercase font-bold ${doc.status === 'Joyida' ? 'border-slate-200 text-slate-800' : 'border-neutral-300 text-slate-400'}`}>
-                      {t(doc.status)}
-                    </span>
+                  <td>
+                    <div className="table-cell-inner">
+                      <span className={doc.status === "Joyida" ? "status-badge status-joyida" : doc.status === "Berilgan" ? "status-badge status-berilgan" : "status-badge status-neutral"}>
+                        {t(doc.status)}
+                      </span>
+                    </div>
                   </td>
-                  <td className="py-2.5 px-3 text-right">
-                    <button className="font-mono text-[10px] px-1 bg-primary-600 text-white py-0.5">{t("Batafsil ma'lumot va PDF korish")}</button>
+                  <td>
+                    <div className="table-cell-inner table-cell-inner--end">
+                      <button className="text-[10px] px-2 py-1 bg-primary-600 text-white rounded">{t("Batafsil ma'lumot va PDF korish")}</button>
+                    </div>
                   </td>
                 </tr>
               ))}

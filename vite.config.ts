@@ -1,31 +1,29 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import {defineConfig} from 'vite';
+import react from "@vitejs/plugin-react";
+import path from "path";
+import { fileURLToPath } from "url";
+import { defineConfig } from "vite";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(() => {
-  const apiTarget = process.env.VITE_API_PROXY_TARGET || 'https://api.arxivfjsti.uz';
+  const apiTarget = process.env.VITE_API_PROXY_TARGET || "http://localhost:3000";
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        "@": path.resolve(__dirname, "."),
       },
     },
     server: {
       proxy: {
-        '/api/v1': {
+        "/api/v1": {
           target: apiTarget,
           changeOrigin: true,
-          secure: true,
         },
       },
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      hmr: process.env.DISABLE_HMR !== "true",
+      watch: process.env.DISABLE_HMR === "true" ? null : {},
     },
   };
 });

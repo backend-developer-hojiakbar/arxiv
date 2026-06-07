@@ -22,6 +22,7 @@ export function mapCategory(raw: Record<string, unknown>) {
     description: raw.description as string | undefined,
     isActive: (raw.is_active ?? raw.isActive ?? true) as boolean,
     createdAt: (raw.created_at ?? raw.createdAt ?? "") as string,
+    docCount: (raw.doc_count ?? raw.docCount ?? 0) as number,
   };
 }
 
@@ -33,6 +34,7 @@ export function mapCabinet(raw: Record<string, unknown>) {
     maxFloor: (raw.max_floor ?? raw.maxFloor ?? 9) as number,
     isActive: (raw.is_active ?? raw.isActive ?? true) as boolean,
     createdAt: (raw.created_at ?? raw.createdAt ?? "") as string,
+    docCount: (raw.doc_count ?? raw.docCount ?? 0) as number,
   };
 }
 
@@ -72,14 +74,16 @@ export function mapDocument(raw: Record<string, unknown>) {
   const category = raw.category as Record<string, unknown> | null | undefined;
   const cabinet = raw.cabinet as Record<string, unknown> | null | undefined;
 
-  let studentName = (raw.student_name as string) || null;
+  let studentName = (raw.student_name ?? raw.studentName) as string | null;
   if (!studentName && student) {
-    studentName = `${student.last_name} ${student.first_name}`;
+    const st = mapStudent(student);
+    studentName = [st.lastName, st.firstName, st.middleName].filter(Boolean).join(" ").trim() || null;
   }
 
   let employeeName: string | null = null;
   if (employee) {
-    employeeName = `${employee.last_name} ${employee.first_name}`;
+    const emp = mapEmployee(employee);
+    employeeName = [emp.lastName, emp.firstName, emp.middleName].filter(Boolean).join(" ").trim() || null;
   }
 
   return {
@@ -101,7 +105,7 @@ export function mapDocument(raw: Record<string, unknown>) {
     fileSize: (raw.file_size ?? raw.fileSize ?? 0) as number,
     notes: raw.notes as string | undefined,
     description: raw.description as string | undefined,
-    receivedAt: (raw.created_at ?? raw.receivedAt ?? raw.createdAt) as string,
+    receivedAt: (raw.received_at ?? raw.created_at ?? raw.receivedAt ?? raw.createdAt) as string,
     createdAt: (raw.created_at ?? raw.createdAt) as string,
     updatedAt: (raw.updated_at ?? raw.updatedAt) as string,
     createdBy: (raw.created_by ?? raw.createdBy) as string | undefined,

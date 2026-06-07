@@ -88,8 +88,12 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
       setCabinets(cabs);
 
       // Load clean lists
-      const empList = await api.getEmployees();
+      const [empList, stdList] = await Promise.all([
+        api.getEmployees(),
+        api.getStudents(),
+      ]);
       setExistingEmployees(empList || []);
+      setExistingStudents(stdList || []);
     } catch (err) {
       console.error("Failed to load metadata in Intake", err);
     }
@@ -142,8 +146,33 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
       const flowType = getCategoryFlowType(categoryId, categories);
       let personType = "none";
       let employeeId: string | undefined;
+      let studentId: string | undefined;
 
-      if (flowType === "employee") {
+      if (flowType === "student") {
+        personType = "student";
+        if (studentMode === "existing") {
+          if (!selectedStudentId) {
+            setGlobalError(t("Mavjud talabani tanlang!"));
+            setLoading(false);
+            return;
+          }
+          studentId = selectedStudentId;
+        } else {
+          if (!lastName.trim() || !firstName.trim()) {
+            setGlobalError(t("Yangi talaba uchun familiya va ism kiritilishi shart"));
+            setLoading(false);
+            return;
+          }
+          const std = await api.createStudent({
+            lastName: lastName.trim(),
+            firstName: firstName.trim(),
+            middleName: middleName.trim() || undefined,
+            studentId: studentRegId.trim() || undefined,
+            groupName: groupName.trim() || undefined,
+          });
+          studentId = std.id;
+        }
+      } else if (flowType === "employee") {
         personType = "employee";
         if (employeeMode === "existing") {
           if (!selectedEmployeeId) {
@@ -173,15 +202,16 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
 
       await api.createDocument({
         categoryId,
-        docName,
+        docName: docName.trim(),
         docDate,
         cabinetId,
         floor: Number(floor),
         personType,
         employeeId,
+        studentId,
         notes,
-        file,
-        pdfBase64: pdfBase64 || undefined,
+        file: file || undefined,
+        pdfBase64: !file && pdfBase64 ? pdfBase64 : undefined,
         pdfFilename: file?.name || "arxiv_hujjat.pdf",
       });
       setSuccess(true);
@@ -235,33 +265,78 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
   const flowType = categoryId ? getCategoryFlowType(categoryId, categories) : "institut";
 
   const getPersonSummary = () => {
+    if (flowType === "student") {
+      if (studentMode === "existing" && selectedStudentId) {
+        const st = existingStudents.find((s) => s.id === selectedStudentId);
+        if (!st) return null;
+        return {
+          title: "Talaba ma'lumotlari",
+          fields: [
+            { label: "F.I.Sh.", value: `${st.lastName} ${st.firstName} ${st.middleName || ""}`.trim() },
+            ...(st.studentId ? [{ label: "Talaba ID", value: st.studentId }] : []),
+            ...(st.groupName ? [{ label: "Guruh", value: st.groupName }] : []),
+            { label: "Hujjat nomi", value: docName.trim() },
+            { label: "Hujjat sanasi", value: docDate ? new Date(docDate).toLocaleDateString("uz-UZ") : "—" },
+          ],
+        };
+      }
+      if (studentMode === "new" && lastName.trim() && firstName.trim()) {
+        const fullName = `${lastName} ${firstName} ${middleName}`.trim();
+        return {
+          title: "Talaba ma'lumotlari",
+          fields: [
+            { label: "F.I.Sh.", value: fullName },
+            ...(studentRegId.trim() ? [{ label: "Talaba ID", value: studentRegId.trim() }] : []),
+            ...(groupName.trim() ? [{ label: "Guruh", value: groupName.trim() }] : []),
+            { label: "Hujjat nomi", value: docName.trim() },
+            { label: "Hujjat sanasi", value: docDate ? new Date(docDate).toLocaleDateString("uz-UZ") : "—" },
+          ],
+        };
+      }
+      return null;
+    }
+
     if (flowType === "employee") {
       if (employeeMode === "existing" && selectedEmployeeId) {
         const emp = existingEmployees.find((e) => e.id === selectedEmployeeId);
         if (!emp) return null;
         return {
-          title: "Hujjat kiritiladigan xodim:",
+          title: "Xodim ma'lumotlari",
           fields: [
-            { label: "XODIM F.I.Sh:", value: `${emp.lastName} ${emp.firstName} ${emp.middleName || ""}`.trim() },
-            ...(emp.employeeId ? [{ label: "Xodim ID:", value: emp.employeeId }] : []),
-            ...(emp.department ? [{ label: "Kafedrasi / Bo'limi", value: emp.department }] : []),
-            ...(emp.position ? [{ label: "Lavozimi:", value: emp.position }] : []),
+            { label: "F.I.Sh.", value: `${emp.lastName} ${emp.firstName} ${emp.middleName || ""}`.trim() },
+            ...(emp.employeeId ? [{ label: "Xodim ID", value: emp.employeeId }] : []),
+            ...(emp.department ? [{ label: "Bo'lim", value: emp.department }] : []),
+            ...(emp.position ? [{ label: "Lavozim", value: emp.position }] : []),
+            { label: "Hujjat nomi", value: docName.trim() },
+            { label: "Hujjat sanasi", value: docDate ? new Date(docDate).toLocaleDateString("uz-UZ") : "—" },
           ],
         };
       }
       if (employeeMode === "new" && employeeLastName.trim() && employeeFirstName.trim()) {
         const fullName = `${employeeLastName} ${employeeFirstName} ${employeeMiddleName}`.trim();
         return {
-          title: "Hujjat kiritiladigan xodim:",
+          title: "Xodim ma'lumotlari",
           fields: [
-            { label: "XODIM F.I.Sh:", value: fullName },
-            ...(employeeRegId.trim() ? [{ label: "Xodim ID:", value: employeeRegId.trim() }] : []),
-            ...(employeeDepartment.trim() ? [{ label: "Kafedrasi / Bo'limi", value: employeeDepartment.trim() }] : []),
-            ...(employeePosition.trim() ? [{ label: "Lavozimi:", value: employeePosition.trim() }] : []),
+            { label: "F.I.Sh.", value: fullName },
+            ...(employeeRegId.trim() ? [{ label: "Xodim ID", value: employeeRegId.trim() }] : []),
+            ...(employeeDepartment.trim() ? [{ label: "Bo'lim", value: employeeDepartment.trim() }] : []),
+            ...(employeePosition.trim() ? [{ label: "Lavozim", value: employeePosition.trim() }] : []),
+            { label: "Hujjat nomi", value: docName.trim() },
+            { label: "Hujjat sanasi", value: docDate ? new Date(docDate).toLocaleDateString("uz-UZ") : "—" },
           ],
         };
       }
       return null;
+    }
+
+    if (flowType === "institut" && docName.trim()) {
+      return {
+        title: "Institut hujjati",
+        fields: [
+          { label: "Hujjat nomi", value: docName.trim() },
+          { label: "Hujjat sanasi", value: docDate ? new Date(docDate).toLocaleDateString("uz-UZ") : "—" },
+        ],
+      };
     }
 
     return null;
@@ -273,7 +348,10 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
     let secondStepLabel = "Hujjat ma'lumotlari";
     let secondStepDesc = "Nomi, raqami va chiqarilgan sanasi";
     
-    if (flowType === "employee") {
+    if (flowType === "student") {
+      secondStepLabel = "Hujjat va talaba";
+      secondStepDesc = "F.I.Sh va HEMIS rekvizitlari";
+    } else if (flowType === "employee") {
       secondStepLabel = "Hujjat va xodim";
       secondStepDesc = "F.I.Sh va tababel rekvizitlari";
     }
@@ -293,8 +371,14 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
   const isStepValid = () => {
     if (step === 1) return !!categoryId;
     if (step === 2) {
-      if (flowType === "institut" || flowType === "student") {
+      if (flowType === "institut") {
         return docName.trim().length >= 2 && !!docDate;
+      }
+      if (flowType === "student") {
+        const hasDocFields = docName.trim().length >= 2 && !!docDate;
+        if (!hasDocFields) return false;
+        if (studentMode === "existing") return !!selectedStudentId;
+        return lastName.trim().length >= 2 && firstName.trim().length >= 2;
       }
       if (flowType === "employee") {
         const hasDocFields = docName.trim().length >= 2 && !!docDate;
@@ -393,7 +477,7 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
               {globalError && (
                 <div className="mb-4 border border-red-200 bg-red-50/50 p-3.5 text-xs font-sans font-medium flex items-start gap-2.5 rounded-lg">
                   <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                  <span className="text-red-850">{t(globalError)}</span>
+                  <span className="text-red-850 text-plain">{globalError}</span>
                 </div>
               )}
 
@@ -487,6 +571,70 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
                           />
                         </div>
                       </div>
+
+                      {flowType === "student" && (
+                        <div className="space-y-4 border-t border-neutral-200/60 pt-4">
+                          <div className="grid grid-cols-2 gap-4 border border-primary-100 p-1 bg-indigo-50/20 rounded-lg">
+                            <button
+                              type="button"
+                              onClick={() => setStudentMode("existing")}
+                              className={`py-2 px-3 tracking-wider font-mono text-xs uppercase font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all rounded ${studentMode === "existing" ? "bg-primary-600 text-white shadow-sm" : "text-indigo-700 hover:bg-indigo-50/40"}`}
+                            >
+                              <Users className="w-3.5 h-3.5" /> {t("Mavjud talabani tanlash")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setStudentMode("new")}
+                              className={`py-2 px-3 tracking-wider font-mono text-xs uppercase font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all rounded ${studentMode === "new" ? "bg-primary-600 text-white shadow-sm" : "text-indigo-700 hover:bg-indigo-50/40"}`}
+                            >
+                              <UserPlus className="w-3.5 h-3.5" /> {t("Yangi talaba qo'shish")}
+                            </button>
+                          </div>
+
+                          {studentMode === "existing" ? (
+                            <div>
+                              <label className="block text-xs font-mono uppercase tracking-wider text-neutral-500 font-semibold mb-1">
+                                {t("Arxivdagi talabalar ro'yxatidan tanlang (*)")}
+                              </label>
+                              <select
+                                value={selectedStudentId}
+                                onChange={(e) => setSelectedStudentId(e.target.value)}
+                                className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded-lg focus:border-primary-600 outline-none cursor-pointer"
+                              >
+                                <option value="">{t("-- Talabani tanlang --")}</option>
+                                {existingStudents.map((std) => (
+                                  <option key={std.id} value={std.id}>
+                                    {std.lastName} {std.firstName} {std.middleName || ""} — {std.studentId || t("ID yo'q")} — {std.groupName || t("Guruh yo'q")}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-indigo-50/40 p-4 bg-indigo-50/10 rounded-xl">
+                              <div>
+                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">{t("Familiyasi (*)")}</label>
+                                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">{t("Ismi (*)")}</label>
+                                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">{t("Otasining ismi")}</label>
+                                <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">{t("Student ID (HEMIS)")}</label>
+                                <input type="text" value={studentRegId} onChange={(e) => setStudentRegId(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">{t("Akademik guruh")}</label>
+                                <input type="text" value={groupName} onChange={(e) => setGroupName(e.target.value)} className="w-full bg-white border border-neutral-300 px-3 py-1.5 text-xs rounded" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -736,8 +884,8 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
                         className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded focus:border-primary-600 outline-hidden focus:ring-1 focus:ring-indigo-100 transition-all cursor-pointer"
                       >
                         <option value="">{t("-- Shkafni tanlang --")}</option>
-                        {cabinets.map((cab) => (
-                           <option key={cab.id} value={cab.id}>{t(cab.name)} - ({t("Maksimal")} {cab.maxFloor} {t("qavat")})</option>
+                        {cabinets.filter((c) => c.isActive !== false).map((cab) => (
+                           <option key={cab.id} value={cab.id}>{cab.name} — {t("Maks.")} {cab.maxFloor} {t("qavat")}</option>
                         ))}
                       </select>
                       {selectedCabinet && (
@@ -785,62 +933,51 @@ export default function IntakeTab({ onNavigateToTab }: IntakeTabProps) {
               )}              {/* STEP 5: FINAL COMPLETE CONFIRMATION SUMMARY */}
               {step === 5 && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                  <div className="flex justify-between items-center border-b border-primary-100 pb-2">
-                    <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-primary-900">
-                      {t("5-Bosqich: Arxivga kiritishdan oldin xulosa")}
-                    </h3>
-                    <span className="font-mono text-[10px] text-indigo-400 uppercase font-black tracking-widest">{t("tasdiqlash zaxirasi")}</span>
-                  </div>
+                  <h3 className="card-section-title">{t("Yakuniy xulosa — saqlashdan oldin tekshiring")}</h3>
 
-                  <div className="border border-primary-100 rounded-xl overflow-hidden divide-y divide-indigo-50/60 shadow-sm">
+                  <div className="card divide-y divide-slate-100 overflow-hidden">
                     {personSummary && (
-                      <>
-                        <div className="bg-indigo-50/30 p-3 font-mono text-[11px] font-bold text-indigo-850 uppercase">
-                          {t(personSummary.title)}
-                        </div>
-                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      <div className="p-4 space-y-3">
+                        <h4 className="text-sm font-semibold text-slate-800">{t(personSummary.title)}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                           {personSummary.fields.map((field) => (
                             <div key={field.label}>
-                              <span className="text-slate-400 block text-[11px] font-medium">{t(field.label)}</span>
-                              <span className="font-semibold text-slate-800">{field.value}</span>
+                              <span className="field-label !mb-0">{t(field.label)}</span>
+                              <span className="text-plain font-medium text-slate-800">{field.value}</span>
                             </div>
                           ))}
                         </div>
-                      </>
+                      </div>
                     )}
 
-                    <div className="bg-indigo-50/30 p-3 font-mono text-[11px] font-bold text-indigo-850 uppercase">
-                      {t("Kategoriya va yuklanadigan fayl nusxasi:")}
-                    </div>
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-slate-400 block text-[11px] font-medium">{t("Hujjat turi (Kategoriya):")}</span>
-                        <span className="font-bold text-slate-800">{t(categories.find(c => c.id === categoryId)?.name) || t("Kategoriya topilmadi")}</span>
+                        <span className="field-label !mb-0">{t("Kategoriya")}</span>
+                        <span className="text-plain">{categories.find(c => c.id === categoryId)?.name || "—"}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[11px] font-medium">{t("Yuklangan PDF nomi:")}</span>
-                        <span className="font-mono text-xs text-slate-700 truncate block font-bold">{file?.name}</span>
+                        <span className="field-label !mb-0">{t("PDF fayl")}</span>
+                        <span className="text-plain text-slate-700 truncate block">{file?.name || "—"}</span>
                       </div>
                     </div>
 
-                    <div className="bg-indigo-50/30 p-3 font-mono text-[11px] font-bold text-indigo-850 uppercase">
-                      {t("Haqiqiy fizik saqlash koordinatasi:")}
-                    </div>
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-primary-900 text-white">
-                      <div>
-                        <span className="text-indigo-200 block text-[11px] font-medium">{t("SHKAF REKVIZITI:")}</span>
-                        <span className="font-black text-sm tracking-wider uppercase font-sans text-white">{t(selectedCabinet?.name)}</span>
-                      </div>
-                      <div>
-                        <span className="text-indigo-200 block text-[11px] font-medium">{t("TOKCHA / QAVAT:")}</span>
-                        <span className="font-mono font-black text-base text-emerald-400">{floor}-{t("QAVAT")}</span>
-                      </div>
-                      {notes && (
-                        <div className="col-span-2 border-t border-indigo-900/40 pt-2">
-                          <span className="text-indigo-200 block text-[11px] font-medium">{t("QO'SHIMCHA IZOH:")}</span>
-                          <span className="italic opacity-80 text-indigo-100">{notes}</span>
+                    <div className="p-4 bg-primary-900 text-white rounded-b-xl">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-indigo-200 text-xs">{t("Shkaf")}</span>
+                          <div className="font-semibold text-plain">{selectedCabinet?.name || "—"}</div>
                         </div>
-                      )}
+                        <div>
+                          <span className="text-indigo-200 text-xs">{t("Qavat")}</span>
+                          <div className="font-semibold text-emerald-300">{floor}-{t("qavat")}</div>
+                        </div>
+                        {notes && (
+                          <div className="col-span-2 border-t border-indigo-800 pt-2">
+                            <span className="text-indigo-200 text-xs">{t("Izoh")}</span>
+                            <p className="text-indigo-100 text-plain">{notes}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </motion.div>

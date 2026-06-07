@@ -96,8 +96,8 @@ export default function Sidebar({ currentUser, activeTab, onTabChange, onLogout,
             {currentUser?.fullName?.[0]?.toUpperCase() || 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate text-slate-800" title={currentUser?.fullName}>
-              {t(currentUser?.fullName)}
+            <p className="text-sm font-medium truncate text-slate-800 text-plain" title={currentUser?.fullName}>
+              {currentUser?.fullName}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
               {currentUser?.role === 'admin' ? t("Bosh Arxivchi (Admin)") : currentUser?.role === 'xodim' ? t("Arxiv Operator") : t("Arxivchi (Viewer)")}

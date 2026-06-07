@@ -12,9 +12,11 @@ import {
   mapStudent,
   mapUser,
 } from "./apiMappers.ts";
+import { getDocumentPersonLabel } from "./utils/format.ts";
 
 const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "https://api.arxivfjsti.uz/api/v1";
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "/api/v1" : "https://api.arxivfjsti.uz/api/v1");
 
 const ACCESS_TOKEN_KEY = "arxiv_auth_token";
 const REFRESH_TOKEN_KEY = "arxiv_refresh_token";
@@ -44,17 +46,46 @@ export function removeAuthToken() {
   localStorage.removeItem("arxiv_user");
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  category_id: "Kategoriya",
+  cabinet_id: "Shkaf",
+  floor: "Qavat",
+  doc_name: "Hujjat nomi",
+  doc_date: "Hujjat sanasi",
+  file: "PDF fayl",
+  person_type: "Shaxs turi",
+  student_id: "Talaba",
+  employee_id: "Xodim",
+};
+
 function parseApiError(data: unknown, fallback: string): string {
   if (!data || typeof data !== "object") return fallback;
   const detail = (data as { detail?: unknown }).detail;
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail) && detail.length > 0) {
-    const first = detail[0] as { msg?: string };
-    return first.msg || fallback;
+    const messages = detail.map((item) => {
+      const entry = item as { msg?: string; loc?: unknown[] };
+      const fieldKey = Array.isArray(entry.loc)
+        ? String(entry.loc[entry.loc.length - 1] || "")
+        : "";
+      const label = FIELD_LABELS[fieldKey] || fieldKey;
+      return label ? `${label}: ${entry.msg || "xato"}` : entry.msg || fallback;
+    });
+    return messages.join(". ");
   }
   const error = (data as { error?: string }).error;
   if (error) return error;
   return fallback;
+}
+
+function base64ToPdfFile(base64: string, filename: string): File {
+  const base64Data = base64.replace(/^data:application\/pdf;base64,/, "");
+  const binary = atob(base64Data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new File([bytes], filename, { type: "application/pdf" });
 }
 
 async function refreshTokens(): Promise<boolean> {
@@ -217,25 +248,33 @@ export const api = {
   },
 
   getStats: async () => {
-    const [counters, activities, categoryChart, weeklyStats, cabinetsRaw, allDocs] =
+    const [counters, categoriesRaw, weeklyStats, cabinetsRaw, allDocs] =
       await Promise.all([
         request<Record<string, number>>("/dashboard/counters"),
-        request<Record<string, unknown>[]>("/dashboard/activities"),
-        request<Array<{ name: string; count: number }>>("/dashboard/categories-chart"),
+        request<Record<string, unknown>[]>("/categories"),
         request<Array<{ date: string; count: number }>>("/dashboard/weekly-stats"),
         request<Record<string, unknown>[]>("/cabinets"),
         fetchAllDocumentsForStats(),
       ]);
 
+    const categories = categoriesRaw.map(mapCategory);
     const cabinets = cabinetsRaw.map(mapCabinet);
+    const categoryById = Object.fromEntries(categories.map((c) => [c.id, c]));
+    const cabinetById = Object.fromEntries(cabinets.map((c) => [c.id, c]));
     const totalDocs = counters.total_documents || 0;
 
-    const categoryStats = categoryChart.map((cat) => ({
-      id: cat.name,
-      name: cat.name,
-      count: cat.count,
-      percent: totalDocs > 0 ? Math.round((cat.count / totalDocs) * 100) : 0,
-    }));
+    const categoryStats = categoriesRaw
+      .map(mapCategory)
+      .filter((c) => c.isActive)
+      .map((cat) => {
+        const count = allDocs.filter((d) => d.categoryId === cat.id).length;
+        return {
+          id: cat.id,
+          name: cat.name,
+          count,
+          percent: totalDocs > 0 ? Math.round((count / totalDocs) * 100) : 0,
+        };
+      });
 
     const cabinetStats = cabinets.map((cab) => {
       const cabDocs = allDocs.filter((d) => d.cabinetId === cab.id);
@@ -256,15 +295,22 @@ export const api = {
       };
     });
 
-    const songgiYozuvlar = (activities || []).slice(0, 10).map((item) => ({
-      id: item.id,
-      receivedAt: item.created_at,
-      studentName: item.student_name || "—",
-      categoryName: item.group_name ? `Guruh: ${item.group_name}` : "—",
-      cabinetName: "—",
-      floor: 0,
-      status: item.status,
-    }));
+    const songgiYozuvlar = [...allDocs]
+      .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
+      .slice(0, 10)
+      .map((doc) => {
+        const person = getDocumentPersonLabel(doc);
+        return {
+          id: doc.id,
+          receivedAt: doc.receivedAt,
+          personName: person.name,
+          personSubtitle: person.subtitle,
+          categoryName: doc.category?.name || categoryById[doc.categoryId]?.name || "—",
+          cabinetName: doc.cabinet?.name || cabinetById[doc.cabinetId]?.name || "—",
+          floor: doc.floor ?? 0,
+          status: doc.status,
+        };
+      });
 
     const dayNames = ["Yak", "Dush", "Sesh", "Chor", "Pay", "Jum", "Shan"];
     const weeklyData = weeklyStats.map((day) => {
@@ -310,6 +356,7 @@ export const api = {
     if (params.floor) query.set("floor", String(params.floor));
     if (params.docDate) query.set("doc_date", params.docDate);
     if (params.personType) query.set("person_type", params.personType);
+    if (params.status) query.set("status", params.status);
     if (params.page) query.set("page", String(params.page));
     if (params.limit) query.set("size", String(params.limit));
 
@@ -367,11 +414,11 @@ export const api = {
     if (data.notes) form.append("notes", data.notes);
     if (data.description) form.append("description", data.description);
 
+    const pdfName = data.pdfFilename || data.file?.name || "arxiv_hujjat.pdf";
     if (data.file) {
-      form.append("file", data.file);
+      form.append("file", data.file, data.file.name);
     } else if (data.pdfBase64) {
-      form.append("pdf_base64", data.pdfBase64);
-      form.append("pdf_filename", data.pdfFilename || "arxiv_hujjat.pdf");
+      form.append("file", base64ToPdfFile(data.pdfBase64, pdfName), pdfName);
     }
 
     const raw = await request<Record<string, unknown>>("/documents", {
@@ -395,6 +442,9 @@ export const api = {
       status?: string;
       notes?: string;
       description?: string;
+      file?: File | null;
+      pdfBase64?: string;
+      pdfFilename?: string;
     }
   ) => {
     const body: Record<string, unknown> = {};
@@ -410,6 +460,20 @@ export const api = {
     if (data.notes !== undefined) body.notes = data.notes;
     if (data.description !== undefined) body.description = data.description;
 
+    const pdfName = data.pdfFilename || data.file?.name || "arxiv_hujjat.pdf";
+    if (data.pdfBase64) {
+      body.pdf_base64 = data.pdfBase64;
+      body.pdf_filename = pdfName;
+    } else if (data.file) {
+      body.pdf_base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("PDF faylni o'qib bo'lmadi"));
+        reader.readAsDataURL(data.file!);
+      });
+      body.pdf_filename = pdfName;
+    }
+
     const raw = await request<Record<string, unknown>>(`/documents/${id}`, {
       method: "PUT",
       body: JSON.stringify(body),
@@ -421,8 +485,14 @@ export const api = {
     request(`/documents/${id}`, { method: "DELETE" }),
 
   getCategories: async (all = false) => {
-    const raw = await request<Record<string, unknown>[]>("/categories");
-    const mapped = raw.map(mapCategory);
+    const [raw, allDocs] = await Promise.all([
+      request<Record<string, unknown>[]>("/categories"),
+      fetchAllDocumentsForStats().catch(() => [] as ReturnType<typeof mapDocument>[]),
+    ]);
+    const mapped = raw.map(mapCategory).map((cat) => ({
+      ...cat,
+      docCount: allDocs.filter((d) => d.categoryId === cat.id).length,
+    }));
     return all ? mapped : mapped.filter((c) => c.isActive);
   },
 
@@ -455,8 +525,14 @@ export const api = {
     request(`/categories/${id}`, { method: "DELETE" }),
 
   getCabinets: async () => {
-    const raw = await request<Record<string, unknown>[]>("/cabinets");
-    return raw.map(mapCabinet);
+    const [raw, allDocs] = await Promise.all([
+      request<Record<string, unknown>[]>("/cabinets"),
+      fetchAllDocumentsForStats().catch(() => [] as ReturnType<typeof mapDocument>[]),
+    ]);
+    return raw.map(mapCabinet).map((cab) => ({
+      ...cab,
+      docCount: allDocs.filter((d) => d.cabinetId === cab.id).length,
+    }));
   },
 
   createCabinet: async (
@@ -547,6 +623,23 @@ export const api = {
       items: Record<string, unknown>[];
     }>(`/audit-logs?page=${page}&size=${size}`);
     return (raw.items || []).map(mapAuditLog);
+  },
+
+  getAllAuditLogs: async () => {
+    const all: ReturnType<typeof mapAuditLog>[] = [];
+    let page = 1;
+    const size = 100;
+    while (true) {
+      const raw = await request<{ items: Record<string, unknown>[] }>(
+        `/audit-logs?page=${page}&size=${size}`
+      );
+      const batch = (raw.items || []).map(mapAuditLog);
+      if (!batch.length) break;
+      all.push(...batch);
+      if (batch.length < size) break;
+      page += 1;
+    }
+    return all;
   },
 
   getStudents: async (query?: string) => {

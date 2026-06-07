@@ -8,7 +8,7 @@
       "role": "admin",
       "isActive": true,
       "createdAt": "2026-01-15T09:00:00.000Z",
-      "lastLoginAt": "2026-06-05T13:01:54.658Z"
+      "lastLoginAt": "2026-06-07T06:08:52.352Z"
     },
     {
       "id": "u-2",
@@ -204,6 +204,16 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log-178081253235350a9",
+      "userId": "u-1",
+      "userFullName": "Fayzullayev Alisher Alimovich",
+      "action": "Tizimga muvaffaqiyatli kirdi (Login)",
+      "entityType": "Auth",
+      "entityId": "u-1",
+      "ip": "127.0.0.1",
+      "createdAt": "2026-06-07T06:08:52.353Z"
+    },
     {
       "id": "log-1780664514661u7uk",
       "userId": "u-1",

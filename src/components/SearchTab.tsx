@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
+import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
 
 interface SearchTabProps {
   initialFilters?: any;
@@ -29,10 +30,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [cabinetId, setCabinetId] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [docDate, setDocDate] = useState("");
-  const [status, setStatus] = useState("");
+  const [filterDate, setFilterDate] = useState("");
   const { t } = useTranslation();
   
   // Lists for dropdowns
@@ -115,10 +113,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
         q,
         categoryId: overrideParams?.categoryId !== undefined ? overrideParams.categoryId : categoryId,
         cabinetId: overrideParams?.cabinetId !== undefined ? overrideParams.cabinetId : cabinetId,
-        docDate: overrideParams?.docDate !== undefined ? overrideParams.docDate : docDate,
-        dateFrom,
-        dateTo,
-        status,
+        docDate: overrideParams?.docDate !== undefined ? overrideParams.docDate : filterDate,
         page: 1,
         limit: 100
       };
@@ -137,10 +132,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
     setQ("");
     setCategoryId("");
     setCabinetId("");
-    setDocDate("");
-    setDateFrom("");
-    setDateTo("");
-    setStatus("");
+    setFilterDate("");
     setTimeout(() => {
       searchDocuments({ categoryId: "", cabinetId: "", docDate: "" });
     }, 50);
@@ -227,86 +219,62 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
         </p>
       </div>
 
-      {/* Filter controls Section */}
-      <div className="border border-primary-100 rounded-xl p-5 bg-white space-y-4 shadow-sm shadow-indigo-100/10">
-        <div className="flex items-center gap-2 border-b border-primary-100/60 pb-2 mb-1">
+      <div className="filter-panel space-y-4">
+        <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-primary-600" />
-          <span className="font-mono text-xs font-bold uppercase tracking-wider text-primary-900">
-            {t("Fizik Qidiruv Filtrlari (AND mantiqli)")}
-          </span>
+          <h3 className="text-sm font-semibold text-slate-800">{t("Qidiruv filtrlari")}</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Main lookup text */}
-          <div className="md:col-span-2">
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">
-              {t("Hujjat nomi / Xodim ism familiyasi")}
-            </label>
+        <div className="filter-grid">
+          <div className="md:col-span-2 lg:col-span-3">
+            <label className="field-label">{t("Ism, ID yoki hujjat nomi")}</label>
             <div className="relative">
               <input
                 type="text"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder={t("Qidirish uchun qiymat kiriting...")}
-                className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded-lg focus:border-indigo-500 outline-none focus:ring-1 focus:ring-indigo-150 transition-all text-sm font-sans"
+                placeholder={t("Masalan: Abduvahobov yoki HEMIS102938")}
+                className="w-full border border-slate-300 px-3 py-2 rounded-lg"
               />
               {q && (
-                <button 
-                  onClick={() => setQ("")}
-                  className="absolute right-2.5 top-2.5 text-neutral-400 hover:text-primary-600 cursor-pointer"
-                >
+                <button onClick={() => setQ("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-primary-600">
                   <X className="w-4 h-4" />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Category Select */}
           <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">
-              {t("Hujjat Kategoriyasi")}
-            </label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded-lg focus:border-indigo-500 outline-none focus:ring-1 focus:ring-indigo-150 transition-all cursor-pointer text-sm"
-            >
-              <option value="">{t("Barchasi (All)")}</option>
+            <label className="field-label">{t("Kategoriya")}</label>
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full border border-slate-300 px-3 py-2 rounded-lg">
+              <option value="">{t("Barchasi")}</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{t(cat.name)}</option>
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Date from */}
           <div>
-            <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1 font-semibold">
-              {t("Hujjat sanasini belgilang")}
-            </label>
-            <input
-              type="date"
-              value={docDate}
-              onChange={(e) => setDocDate(e.target.value)}
-              className="w-full bg-white border border-neutral-300 px-3 py-2 text-sm rounded-lg focus:border-indigo-500 outline-none focus:ring-1 focus:ring-indigo-150 transition-all text-sm font-sans"
-            />
+            <label className="field-label">{t("Shkaf")}</label>
+            <select value={cabinetId} onChange={(e) => setCabinetId(e.target.value)} className="w-full border border-slate-300 px-3 py-2 rounded-lg">
+              <option value="">{t("Barchasi")}</option>
+              {cabinets.map((cab) => (
+                <option key={cab.id} value={cab.id}>{cab.name}</option>
+              ))}
+            </select>
           </div>
 
-          <div className="md:col-span-4 flex justify-end gap-2 pt-1 border-t border-dashed border-neutral-150">
-            <button
-              onClick={() => searchDocuments()}
-              disabled={loading}
-              className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-mono font-bold text-xs uppercase flex items-center justify-center gap-2 transition-all cursor-pointer rounded-lg shadow-md shadow-indigo-100/40"
-            >
-              <Search className="w-3.5 h-3.5" /> {t("Qidirish")}
-            </button>
-            <button
-              onClick={handleReset}
-              className="px-4 py-2.5 bg-white text-slate-700 border border-slate-300 hover:border-indigo-500 hover:bg-slate-50 font-mono text-xs flex items-center justify-center cursor-pointer rounded-lg transition-all"
-              title={t("Tozalash")}
-            >
-              {t("Tozalash")}
-            </button>
+          <div>
+            <label className="field-label">{t("Sana")}</label>
+            <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border border-slate-300 px-3 py-2 rounded-lg" />
           </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button onClick={() => searchDocuments()} disabled={loading} className="btn-primary">
+            <Search className="w-4 h-4" /> {t("Qidirish")}
+          </button>
+          <button onClick={handleReset} className="btn-secondary">{t("Tozalash")}</button>
         </div>
       </div>
 
@@ -329,7 +297,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
       ) : error ? (
         <div className="p-6 border border-red-200 bg-red-50/50 rounded-xl text-center font-medium my-4">
           <span className="font-mono text-xs uppercase bg-red-600 text-white px-2 py-1 rounded">{t("Xato yuklanish")}</span>
-          <p className="mt-2 text-neutral-600 text-sm">{t(error)}</p>
+          <p className="mt-2 text-neutral-600 text-sm text-plain">{error}</p>
         </div>
       ) : documents.length === 0 ? (
         <div className="border border-primary-100 rounded-xl p-12 text-center space-y-2 bg-slate-50/50">
@@ -340,52 +308,56 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto border border-neutral-150 rounded-xl shadow-sm">
-          <table className="w-full text-left border-collapse bg-white">
+        <div className="overflow-x-auto card !p-0">
+          <table className="data-table w-full text-left border-collapse bg-white text-sm">
             <thead>
-              <tr className="bg-primary-900 text-white text-xs font-medium tracking-wider">
-                <th className="py-3 px-3">{t("O'quvchi F.I.Sh.")}</th>
-                <th className="py-3 px-3">{t("Student ID (Talaba kodi)")}</th>
-                <th className="py-3 px-3">{t("Hujjat turi (Kategoriya)")}</th>
-                <th className="py-3 px-3">{t("Qabul sanasi")}</th>
-                <th className="py-3 px-3 text-center">{t("Fizik Shkaf")}</th>
-                <th className="py-3 px-3 text-center bg-indigo-900">{t("Qavat (Plast)")}</th>
-                <th className="py-3 px-3">{t("Holat")}</th>
-                <th className="py-3 px-3 text-right">{t("Amallar")}</th>
+              <tr>
+                <th className="py-2.5 px-3">{t("Shaxs / Hujjat")}</th>
+                <th className="py-2.5 px-3">{t("Kategoriya")}</th>
+                <th className="py-2.5 px-3">{t("Sana")}</th>
+                <th className="py-2.5 px-3">{t("Joylashuv")}</th>
+                <th className="py-2.5 px-3">{t("Holat")}</th>
+                <th className="py-2.5 px-3 text-right">{t("Amallar")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 text-xs">
-              {documents.map((doc) => (
+            <tbody className="divide-y divide-slate-100">
+              {documents.map((doc) => {
+                const person = getDocumentPersonLabel(doc);
+                return (
                 <tr 
                   key={doc.id}
-                  className="hover:bg-indigo-50/20 transition-all group cursor-pointer"
+                  className="hover:bg-slate-50 group cursor-pointer"
                   onClick={() => setSelectedDoc(doc)}
                 >
-                  <td className="py-3 px-3 font-medium text-neutral-900">
-                    {doc.student ? `${t(doc.student.lastName)} ${t(doc.student.firstName)} ${t(doc.student.middleName || "")}` : t("Noma'lum O'quvchi")}
+                  <td>
+                    <div className="table-cell-inner table-cell-inner--stack">
+                      <div className="font-medium text-slate-800 text-plain">{person.name}</div>
+                      <div className="text-xs text-slate-500 text-plain">{person.subtitle}</div>
+                    </div>
                   </td>
-                  <td className="py-3 px-3 font-mono text-neutral-600">
-                    {doc.student?.studentId || <span className="text-neutral-300">-</span>}
+                  <td>
+                    <div className="table-cell-inner text-slate-600">{doc.category?.name || "—"}</div>
                   </td>
-                  <td className="py-3 px-3 text-neutral-600">
-                    {t(doc.category?.name) || <span className="text-neutral-300">&middot;</span>}
+                  <td>
+                    <div className="table-cell-inner text-slate-500">
+                      {doc.docDate
+                        ? new Date(doc.docDate).toLocaleDateString("uz-UZ")
+                        : new Date(doc.receivedAt).toLocaleDateString("uz-UZ")}
+                    </div>
                   </td>
-                  <td className="py-3 px-3 font-mono text-neutral-500">
-                    {new Date(doc.receivedAt).toLocaleDateString("uz-UZ")}
+                  <td>
+                    <div className="table-cell-inner text-plain">
+                      <span className="font-medium">{doc.cabinet?.name || doc.cabinetId}</span>
+                      <span className="text-slate-500"> · {doc.floor}-{t("qavat")}</span>
+                    </div>
                   </td>
-                  {/* High visual feedback of Location as required in 4.4.5 */}
-                  <td className="py-3 px-3 text-center font-mono font-bold text-primary-900 border-l border-neutral-50 uppercase bg-slate-50/30">
-                    {t(doc.cabinet?.name) || t(doc.cabinetId)}
+                  <td>
+                    <div className="table-cell-inner">
+                      <span className={getStatusStyle(doc.status)}>{t(doc.status)}</span>
+                    </div>
                   </td>
-                  <td className="py-3 px-3 text-center font-mono font-black text-indigo-900 bg-slate-100/50 text-sm border-r border-neutral-50">
-                    {doc.floor}-{t("qavat")}
-                  </td>
-                  <td className="py-3 px-3">
-                    <span className={`inline-block border px-1.5 py-0.5 text-[9px] font-mono uppercase font-bold tracking-wider rounded ${doc.status === 'Joyida' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-neutral-300 text-neutral-400 bg-white'}`}>
-                      {t(doc.status)}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <div className="table-cell-inner table-cell-inner--end">
                     <div className="flex justify-end gap-1.5">
                       <button
                         onClick={() => setSelectedDoc(doc)}
@@ -402,9 +374,10 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
                         <Printer className="w-3.5 h-3.5" /> {t("Chop etish")}
                       </button>
                     </div>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         </div>
@@ -457,9 +430,9 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
                         <MapPin className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="block text-[8px] font-mono text-neutral-500 uppercase tracking-widest font-bold">{t("Fizik saqlash joylashuvi:")}</span>
-                        <strong className="font-mono font-black text-primary-900 leading-tight tracking-wider text-base uppercase">
-                          {t(selectedDoc.cabinet?.name)}, {selectedDoc.floor}-{t("qavat")}
+                        <span className="field-label !mb-0">{t("Fizik joylashuv")}</span>
+                        <strong className="text-primary-900 text-base text-plain">
+                          {selectedDoc.cabinet?.name}, {selectedDoc.floor}-{t("qavat")}
                         </strong>
                       </div>
                     </div>
@@ -471,40 +444,48 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
                     </button>
                   </div>
 
-                  {/* Student details */}
-                  <div className="space-y-2">
-                    <h4 className="font-mono text-xs uppercase text-neutral-500 tracking-wider font-bold border-b border-neutral-100 pb-1">
-                      {t("1. O'quvchi talaba ma'lumotlari")}
-                    </h4>
+                  {(() => {
+                    const person = getDocumentPersonLabel(selectedDoc);
+                    return (
+                  <div className="info-block space-y-3">
+                    <h4 className="card-section-title">{t("Shaxs ma'lumotlari")}</h4>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
                       <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Familiya, Ism, Otasining ismi")}</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedDoc.student ? `${t(selectedDoc.student.lastName)} ${t(selectedDoc.student.firstName)} ${t(selectedDoc.student.middleName || "")}` : t("Noma'lum")}
-                        </span>
+                        <span className="field-label !mb-0">{t("F.I.Sh.")}</span>
+                        <span className="font-semibold text-slate-800 text-plain">{person.name}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Student ID (Talaba kodi)")}</span>
-                        <span className="font-mono font-medium text-slate-800">
-                          {selectedDoc.student?.studentId || <span className="text-neutral-400">{t("Ko'rsatilmagan")}</span>}
-                        </span>
+                        <span className="field-label !mb-0">{t("Turi")}</span>
+                        <span className="text-slate-700">{person.subtitle}</span>
                       </div>
-                      <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Akademik guruh")}</span>
-                        <span className="font-medium text-slate-800">
-                          {selectedDoc.student?.groupName || <span className="text-neutral-400">{t("Noma'lum")}</span>}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Tug'ilgan sana / Telefon")}</span>
-                        <span className="text-slate-800 col-span-2 sm:col-span-1">
-                          {selectedDoc.student?.birthDate ? new Date(selectedDoc.student.birthDate).toLocaleDateString() : ""}
-                          {selectedDoc.student?.phone ? ` / ${selectedDoc.student.phone}` : ""}
-                          {(!selectedDoc.student?.birthDate && !selectedDoc.student?.phone) && <span className="text-neutral-400">{t("Ko'rsatilmagan")}</span>}
-                        </span>
-                      </div>
+                      {person.type === "student" && selectedDoc.student && (
+                        <>
+                          <div>
+                            <span className="field-label !mb-0">{t("Guruh")}</span>
+                            <span className="text-plain">{selectedDoc.student.groupName || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="field-label !mb-0">{t("Telefon")}</span>
+                            <span className="text-plain">{selectedDoc.student.phone || "—"}</span>
+                          </div>
+                        </>
+                      )}
+                      {person.type === "employee" && selectedDoc.employee && (
+                        <div>
+                          <span className="field-label !mb-0">{t("Bo'lim")}</span>
+                          <span className="text-plain">{selectedDoc.employee.department || "—"}</span>
+                        </div>
+                      )}
+                      {person.type === "institut" && (
+                        <div className="col-span-2">
+                          <span className="field-label !mb-0">{t("Hujjat nomi")}</span>
+                          <span className="text-plain">{selectedDoc.docName || "—"}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+                    );
+                  })()}
 
                   {/* Document details */}
                   <div className="space-y-2">
@@ -514,17 +495,15 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
                       <div>
                         <span className="block text-[10px] font-mono text-neutral-400 uppercase font-semibold">{t("Hujjat kategoriyasi")}</span>
-                        <span className="font-medium text-neutral-800">{t(selectedDoc.category?.name) || t("Noma'lum")}</span>
+                        <span className="text-neutral-800 text-plain">{selectedDoc.category?.name || "—"}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase font-semibold">{t("Hujjat holati")}</span>
-                        <span className={`inline-block border px-1.5 py-0.5 text-[9px] font-mono uppercase font-bold tracking-wider rounded ${selectedDoc.status === 'Joyida' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-neutral-350 text-neutral-500 bg-white'}`}>
-                          {t(selectedDoc.status)}
-                        </span>
+                        <span className="field-label !mb-0">{t("Hujjat holati")}</span>
+                        <span className={getStatusStyle(selectedDoc.status)}>{t(selectedDoc.status)}</span>
                       </div>
                       <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Arxivga qabul qildi (Xodim)")}</span>
-                        <span className="font-medium text-neutral-800">{t(selectedDoc.receiver?.fullName) || t("Bosh xodim")}</span>
+                        <span className="field-label !mb-0">{t("Qabul qilgan xodim")}</span>
+                        <span className="font-medium text-neutral-800 text-plain">{selectedDoc.receiver?.fullName || "—"}</span>
                       </div>
                       <div>
                         <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Qabul qilingan sana & vaqt")}</span>
@@ -536,7 +515,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
                         <>
                           <div>
                             <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Hujjatni chiqargan xodim")}</span>
-                            <span className="font-medium text-slate-800">{t(selectedDoc.issuer?.fullName) || t("Administrator")}</span>
+                            <span className="font-medium text-slate-800 text-plain">{selectedDoc.issuer?.fullName || "—"}</span>
                           </div>
                           <div>
                             <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Chiqarilgan sana & vaqt")}</span>
@@ -549,7 +528,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
                       <div className="col-span-2">
                         <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Shkafdagi aniq izoh variantlari")}</span>
                         <p className="text-neutral-700 bg-neutral-50 px-3 py-2 border border-neutral-200 text-xs italic">
-                          {t(selectedDoc.notes) || t("Zaxira izohlar kiritilmagan")}
+                          {selectedDoc.notes || t("Izoh kiritilmagan")}
                         </p>
                       </div>
                     </div>
@@ -633,25 +612,32 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
               </div>
               
               <div className="border-t border-b border-dashed border-slate-200 py-4 space-y-3">
+                {(() => {
+                  const person = getDocumentPersonLabel(printSlipDoc);
+                  return (
+                <>
                 <div>
-                  <span className="block text-[10px] uppercase text-neutral-500 font-bold">{t("Talaba:")}</span>
-                  <span className="font-bold text-sm block">
-                    {printSlipDoc.student ? `${t(printSlipDoc.student.lastName)} ${t(printSlipDoc.student.firstName)} ${t(printSlipDoc.student.middleName || "")}` : t("Noma'lum")}
-                  </span>
-                  <span className="text-xs text-neutral-500">{t("ID kodi:")} {printSlipDoc.student?.studentId || "-"} &middot; {t("Guruhi:")} {printSlipDoc.student?.groupName || "-"}</span>
+                  <span className="block text-[10px] uppercase text-neutral-500 font-bold">{person.type === "student" ? t("Talaba") : person.type === "employee" ? t("Xodim") : t("Hujjat")}:</span>
+                  <span className="font-bold text-sm block text-plain">{person.name}</span>
+                  <span className="text-xs text-neutral-500 text-plain">{person.subtitle}</span>
+                  {printSlipDoc.student?.groupName && (
+                    <span className="text-xs text-neutral-500 block">{t("Guruh")}: {printSlipDoc.student.groupName}</span>
+                  )}
                 </div>
-                
                 <div>
                   <span className="block text-[10px] uppercase text-neutral-500 font-bold">{t("Hujjat turi:")}</span>
-                  <span className="font-medium text-xs font-mono">{t(printSlipDoc.category?.name) || t("Noma'lum")}</span>
+                  <span className="font-medium text-xs text-plain">{printSlipDoc.category?.name || "—"}</span>
                 </div>
+                </>
+                  );
+                })()}
               </div>
 
               {/* Exact Physical Placement high-contrast highlights */}
               <div className="border border-slate-200 p-4 text-center space-y-1 bg-white">
                 <span className="block text-[10px] uppercase font-bold text-neutral-500">{t("SHKAF VA TOKCHA COORD:")}</span>
                 <strong className="block text-xl uppercase tracking-widest leading-none py-1 border border-slate-200 font-black bg-primary-600 text-white">
-                  {t(printSlipDoc.cabinet?.name) || t(printSlipDoc.cabinetId)}
+                  {printSlipDoc.cabinet?.name || printSlipDoc.cabinetId}
                 </strong>
                 <strong className="block text-2xl uppercase tracking-wider leading-none py-1.5 font-sans font-black font-semibold">
                   {printSlipDoc.floor}-{t("qavat").toUpperCase()}
@@ -661,7 +647,7 @@ export default function SearchTab({ initialFilters }: SearchTabProps) {
               {printSlipDoc.notes && (
                 <div className="text-xs">
                   <span className="block font-bold text-[10px] text-neutral-500">QO'SHIMCHA KO'RSATMA:</span>
-                  <p className="italic leading-normal border border-dashed border-neutral-300 p-2 text-[11px] bg-neutral-50">{t(printSlipDoc.notes)}</p>
+                  <p className="italic leading-normal border border-dashed border-neutral-300 p-2 text-[11px] bg-neutral-50 text-plain">{printSlipDoc.notes}</p>
                 </div>
               )}
             </div>

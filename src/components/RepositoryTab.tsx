@@ -21,6 +21,11 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
+import { getCategoryFlowType } from "../apiMappers.ts";
+import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
+
+const editInputClass =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-primary-500";
 
 interface RepositoryTabProps {
   currentUser: any;
@@ -48,6 +53,12 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
   const [editCategoryId, setEditCategoryId] = useState("");
   const [editCabinetId, setEditCabinetId] = useState("");
   const [editFloor, setEditFloor] = useState<number>(1);
+  const [editDocName, setEditDocName] = useState("");
+  const [editDocDate, setEditDocDate] = useState("");
+  const [editStudentId, setEditStudentId] = useState("");
+  const [editEmployeeId, setEditEmployeeId] = useState("");
+  const [students, setStudents] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [editNotes, setEditNotes] = useState("");
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editFileBase64, setEditFileBase64] = useState("");
@@ -83,17 +94,30 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
   }, []);
 
   // Populate Edit Fields on select
-  const handleOpenEdit = (doc: any) => {
+  const handleOpenEdit = async (doc: any) => {
+    const person = getDocumentPersonLabel(doc);
     setEditDoc(doc);
     setEditStatus(doc.status);
     setEditCategoryId(doc.categoryId);
     setEditCabinetId(doc.cabinetId);
     setEditFloor(doc.floor);
+    setEditDocName(doc.docName || (person.type === "institut" ? person.name : "") || "");
+    setEditDocDate(doc.docDate || "");
+    setEditStudentId(doc.studentId || doc.student?.id || "");
+    setEditEmployeeId(doc.employeeId || doc.employee?.id || "");
     setEditNotes(doc.notes || "");
     setStatusNotesAdd("");
     setEditFile(null);
     setEditFileBase64("");
     setEditFileError("");
+
+    try {
+      const [stds, emps] = await Promise.all([api.getStudents(), api.getEmployees()]);
+      setStudents(stds);
+      setEmployees(emps);
+    } catch (err) {
+      console.error("Person lists load error", err);
+    }
   };
 
   // Convert File to Base64 (PDF replacer)
@@ -132,17 +156,51 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
         finalNotes = `${editNotes}\n[Qabul: Kimga berildi: ${statusNotesAdd.trim()} - Sana: ${new Date().toLocaleDateString()}]`;
       }
 
+      const flowType = getCategoryFlowType(editCategoryId, categories);
+      let personType = "none";
+      let studentId: string | null = null;
+      let employeeId: string | null = null;
+
+      if (!editDocName.trim()) {
+        alert(t("Hujjat nomi yoki raqamini kiriting"));
+        setLoading(false);
+        return;
+      }
+
+      if (flowType === "student") {
+        personType = "student";
+        if (!editStudentId) {
+          alert(t("Mavjud talabani tanlang!"));
+          setLoading(false);
+          return;
+        }
+        studentId = editStudentId;
+      } else if (flowType === "employee") {
+        personType = "employee";
+        if (!editEmployeeId) {
+          alert(t("Mavjud xodimni tanlang!"));
+          setLoading(false);
+          return;
+        }
+        employeeId = editEmployeeId;
+      }
+
       const payload: any = {
         status: editStatus,
         categoryId: editCategoryId,
         cabinetId: editCabinetId,
         floor: Number(editFloor),
-        notes: finalNotes
+        docName: editDocName.trim(),
+        docDate: editDocDate,
+        personType,
+        studentId,
+        employeeId,
+        notes: finalNotes,
       };
 
       if (editFileBase64) {
         payload.pdfBase64 = editFileBase64;
-        payload.pdfFilename = editFile?.name;
+        payload.pdfFilename = editFile?.name || "arxiv_hujjat.pdf";
       }
 
       await api.updateDocument(editDoc.id, payload);
@@ -225,6 +283,7 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
   };
 
   const selectedCabinetsMaxFloors = cabinets.find(c => c.id === editCabinetId)?.maxFloor || 9;
+  const editFlowType = editCategoryId ? getCategoryFlowType(editCategoryId, categories) : "institut";
 
   return (
     <div className="space-y-6 selection:bg-primary-100 selection:text-primary-900">
@@ -238,41 +297,54 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
         </p>
       </div>
 
-      {loading && (
-        <div className="py-24 text-center">
-          <div className="w-6 h-6 border border-slate-200 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <span className="font-mono text-xs text-neutral-500 uppercase mt-2 block">{t("Ma'lumotlar olinmoqda...")}</span>
+      {error && (
+        <div className="p-4 border border-red-200 bg-red-50 rounded-lg text-sm text-red-700 text-plain">
+          {error}
+          <button onClick={loadRepository} className="ml-3 underline">{t("Qayta yuklash")}</button>
         </div>
       )}
 
-      {/* Standard master inventory table */}
-      {!loading && (
-        <div className="overflow-x-auto card !p-0">
-          <table className="data-table w-full text-left border-collapse bg-white text-sm">
-            <thead>
-              <tr className="bg-primary-900 text-white text-xs font-semibold">
-                <th className="py-2.5 px-3">{t("Hujjat nomi")}</th>
-                <th className="py-2.5 px-3">{t("Hujjat kategoriyasi")}</th>
-                <th className="py-2.5 px-3">{t("Fizik Shkaf")} & {t("Qavat (Plast)")}</th>
-                <th className="py-2.5 px-3">{t("Qabul qilingan sana")}</th>
-                <th className="py-2.5 px-3 text-right">{t("Amallar")}</th>
+      <div className="relative overflow-x-auto card !p-0">
+        {loading && documents.length > 0 && (
+          <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        <table className="data-table w-full text-left border-collapse bg-white text-sm">
+          <thead>
+            <tr>
+              <th className="py-2.5 px-3">{t("Shaxs / Hujjat")}</th>
+              <th className="py-2.5 px-3">{t("Kategoriya")}</th>
+              <th className="py-2.5 px-3">{t("Joylashuv")}</th>
+              <th className="py-2.5 px-3">{t("Holat")}</th>
+              <th className="py-2.5 px-3">{t("Qabul sanasi")}</th>
+              <th className="py-2.5 px-3 text-right">{t("Amallar")}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {loading && documents.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-16 text-slate-500">{t("Ma'lumotlar yuklanmoqda...")}</td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200 text-xs">
-              {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-neutral-50 font-sans">
-                    <td className="py-2.5 px-3">
-                      <div className="font-semibold text-slate-800">{doc.docName || "—"}</div>
+            ) : documents.map((doc) => {
+              const person = getDocumentPersonLabel(doc);
+              return (
+                  <tr key={doc.id} className="hover:bg-slate-50">
+                    <td className="align-middle">
+                      <div className="font-medium text-slate-800 text-plain">{person.name}</div>
+                      <div className="text-xs text-slate-500 text-plain">{person.subtitle}</div>
                     </td>
-                    <td className="py-2.5 px-3 text-neutral-700">{doc.category?.name ? t(doc.category.name) : t("Kategoriya kiritilmagan")}</td>
-                    <td className="py-2.5 px-3 font-mono">
-                      {doc.cabinet?.name ? t(doc.cabinet.name) : doc.cabinetId}, <strong className="text-slate-800">{doc.floor}-{t("qavat")}</strong>
+                    <td className="align-middle text-slate-600">{doc.category?.name || "—"}</td>
+                    <td className="align-middle text-plain">
+                      {doc.cabinet?.name || doc.cabinetId} · {doc.floor}-{t("qavat")}
                     </td>
-                    <td className="py-2.5 px-3 font-mono text-neutral-500">
+                    <td className="align-middle">
+                      <span className={getStatusStyle(doc.status)}>{t(doc.status)}</span>
+                    </td>
+                    <td className="align-middle text-slate-500">
                       {doc.receivedAt ? new Date(doc.receivedAt).toLocaleDateString("uz-UZ") : "—"}
                     </td>
-                    <td className="py-2.5 px-3 text-right">
-                      {/* Only staff or admin can modify/delete */}
+                    <td className="align-middle text-right">
                       <div className="flex justify-end gap-1.5">
                         <button 
                           onClick={() => setInspectDoc(doc)}
@@ -300,18 +372,18 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
                       </div>
                     </td>
                   </tr>
-              ))}
-              {documents.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="text-center py-12 text-neutral-400 font-mono uppercase">
-                    {t("Hujjatlar topilmadi.")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              );
+            })}
+            {!loading && documents.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center py-12 text-slate-400">
+                  {t("Hujjatlar topilmadi.")}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* INSPECT PREVIEW DRAWER */}
       <AnimatePresence>
@@ -345,24 +417,26 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
                     </div>
                   </div>
 
-                  <div className="space-y-2 border-b border-neutral-100 pb-3">
-                    <h4 className="text-xs font-medium text-neutral-400 font-bold mb-1">{t("O'quvchi rekvizitlari:")}</h4>
-                    <p className="font-bold text-sm text-slate-800">
-                      {inspectDoc.student ? `${inspectDoc.student.lastName} ${inspectDoc.student.firstName} ${inspectDoc.student.middleName || ""}` : inspectDoc.employee ? `${inspectDoc.employee.lastName} ${inspectDoc.employee.firstName} ${inspectDoc.employee.middleName || ""}` : t("Noma'lum")}
-                    </p>
-                    <p className="font-mono text-neutral-600">
-                      HEMIS ID: {inspectDoc.student?.studentId || inspectDoc.employee?.employeeId || t("Yo'q")} &middot; {t("Guruh")}: {inspectDoc.student?.groupName || inspectDoc.employee?.department || t("Noma'lum")} &middot; {t("Telefon raqami")}: {inspectDoc.student?.phone || inspectDoc.employee?.phone || t("Kiritilmagan")}
-                    </p>
+                  {(() => {
+                    const person = getDocumentPersonLabel(inspectDoc);
+                    return (
+                  <div className="info-block space-y-2 border-b border-neutral-100 pb-3">
+                    <h4 className="card-section-title">{t("Shaxs ma'lumotlari")}</h4>
+                    <p className="font-semibold text-sm text-slate-800 text-plain">{person.name}</p>
+                    <p className="text-sm text-slate-600 text-plain">{person.subtitle}</p>
+                    {inspectDoc.docName && person.type === "institut" && (
+                      <p className="text-sm text-slate-600">{t("Hujjat nomi")}: {inspectDoc.docName}</p>
+                    )}
                   </div>
+                    );
+                  })()}
 
                   <div className="space-y-2 border-b border-neutral-100 pb-3">
                     <h4 className="text-xs font-medium text-neutral-400 font-bold mb-1">{t("Status rekvizitlari:")}</h4>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-neutral-400 font-semibold block">{t("Hujjat Holati:")}</span>
-                        <span className={`inline-block border px-1.5 py-0.5 text-[9px] font-mono uppercase font-black ${inspectDoc.status === 'Joyida' ? 'border-slate-200 bg-primary-600 text-white' : 'border-neutral-300 text-neutral-400'}`}>
-                          {t(inspectDoc.status)}
-                        </span>
+                        <span className={getStatusStyle(inspectDoc.status)}>{t(inspectDoc.status)}</span>
                       </div>
                       <div>
                         <span className="text-neutral-400 block">{t("Qabul sanasi:")}</span>
@@ -408,12 +482,14 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
               </div>
 
               <div className="border-t border-neutral-200 pt-4 flex gap-2">
+                {currentUser?.role !== UserRole.VIEWER && (
                 <button 
                   onClick={() => { setInspectDoc(null); handleOpenEdit(inspectDoc); }}
-                  className="px-4 py-2 border border-slate-200 hover:bg-neutral-50 text-slate-800 font-mono text-xs uppercase tracking-wider font-bold flex-1"
+                  className="btn-secondary flex-1"
                 >
                   {t("Tahrirlashga o'tish")}
                 </button>
+                )}
                 <button onClick={() => setInspectDoc(null)} className="px-4 py-2 bg-primary-600 text-white font-mono text-xs uppercase tracking-wider font-bold flex-1">
                   {t("Yopish")}
                 </button>
@@ -426,34 +502,117 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
       {/* EDIT MODAL DIALOG */}
       <AnimatePresence>
         {editDoc && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} onClick={() => setEditDoc(null)} className="fixed inset-0 bg-black z-45" />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white border border-slate-200 z-50 p-6 shadow-2xl overflow-y-auto max-h-[90vh] selection:bg-primary-100 selection:text-primary-900"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-overlay"
+          >
+            <div className="modal-backdrop" onClick={() => setEditDoc(null)} />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="modal-panel max-w-xl p-6"
             >
               <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
-                <h3 className="text-base font-semibold text-slate-800 text-sm tracking-widest">
+                <h3 className="text-base font-semibold text-slate-800">
                   {t("Hujjat rekvizitlarini tahrirlash")}
                 </h3>
-                <button onClick={() => setEditDoc(null)} className="p-1 border border-neutral-300 hover:border-slate-200 cursor-pointer">
+                <button type="button" onClick={() => setEditDoc(null)} className="btn-secondary !p-1.5">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmitEdit} className="space-y-4 text-xs">
-                {/* 1. Status toggle */}
+              <form onSubmit={handleSubmitEdit} className="space-y-4 text-sm">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="field-label">{t("Hujjat nomi yoki raqamini kiriting (*)")}</label>
+                    <input
+                      type="text"
+                      required
+                      value={editDocName}
+                      onChange={(e) => setEditDocName(e.target.value)}
+                      placeholder={t("Masalan: Bo'yruq № 312 yoki Nizom")}
+                      className={editInputClass}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="field-label">{t("Chiqarilgan sanasi")}</label>
+                    <input
+                      type="date"
+                      value={editDocDate}
+                      onChange={(e) => setEditDocDate(e.target.value)}
+                      className={editInputClass}
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1.5 font-bold">
-                    {t("Hujjat Holati (*)")}
-                  </label>
-                  <div className="grid grid-cols-3 gap-2 border border-neutral-300 p-1 bg-neutral-50">
+                  <label className="field-label">{t("Hujjat Kategoriyasi (*)")}</label>
+                  <select
+                    value={editCategoryId}
+                    onChange={(e) => {
+                      setEditCategoryId(e.target.value);
+                      const nextFlow = getCategoryFlowType(e.target.value, categories);
+                      if (nextFlow !== "student") setEditStudentId("");
+                      if (nextFlow !== "employee") setEditEmployeeId("");
+                    }}
+                    className={editInputClass}
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{t(c.name)}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {editFlowType === "student" && (
+                  <div>
+                    <label className="field-label">{t("Arxivdagi talabalar ro'yxatidan tanlang (*)")}</label>
+                    <select
+                      required
+                      value={editStudentId}
+                      onChange={(e) => setEditStudentId(e.target.value)}
+                      className={editInputClass}
+                    >
+                      <option value="">{t("-- Talabani tanlang --")}</option>
+                      {students.map((std) => (
+                        <option key={std.id} value={std.id}>
+                          {std.lastName} {std.firstName} {std.middleName || ""} — {std.studentId || t("ID yo'q")} — {std.groupName || t("Guruh yo'q")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {editFlowType === "employee" && (
+                  <div>
+                    <label className="field-label">{t("Arxivdagi xodimlar ro'yxatidan tanlang (*)")}</label>
+                    <select
+                      required
+                      value={editEmployeeId}
+                      onChange={(e) => setEditEmployeeId(e.target.value)}
+                      className={editInputClass}
+                    >
+                      <option value="">{t("-- Xodimni tanlang --")}</option>
+                      {employees.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.lastName} {emp.firstName} {emp.middleName || ""} — {emp.employeeId || t("ID yo'q")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="field-label">{t("Hujjat Holati (*)")}</label>
+                  <div className="grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
                     {["Joyida", "Berilgan", "Yo'q qilingan"].map((st) => (
                       <button
                         key={st}
                         type="button"
                         onClick={() => setEditStatus(st as DocumentStatus)}
-                        className={`py-1.5 text-xs font-medium font-bold text-center ${editStatus === st ? "bg-primary-600 text-white" : "hover:bg-white text-neutral-600"}`}
+                        className={`rounded-md py-2 text-xs font-medium ${editStatus === st ? "bg-primary-600 text-white" : "text-slate-600 hover:bg-white"}`}
                       >
                         {t(st)}
                       </button>
@@ -461,57 +620,35 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
                   </div>
                 </div>
 
-                {/* 1.5 Notes popup if given out (Berilgan) */}
                 {editStatus === DocumentStatus.BERILGAN && (
-                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="p-3 border border-slate-200 bg-neutral-50 space-y-2">
-                    <label className="block text-[9px] font-mono uppercase tracking-wider text-neutral-600 font-bold">
-                      {t("Kimga va nima maqsadda chiqarilgan? (*)")}
-                    </label>
+                  <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <label className="field-label">{t("Kimga va nima maqsadda chiqarilgan? (*)")}</label>
                     <input
                       type="text"
                       required
                       value={statusNotesAdd}
                       onChange={(e) => setStatusNotesAdd(e.target.value)}
                       placeholder={t("Masalan: Dekanat boshlig'i Soliyevga vaqtinchalik reyting uchun")}
-                      className="w-full bg-white border border-neutral-300 px-2.5 py-1.5 focus:border-slate-200"
+                      className={editInputClass}
                     />
                   </motion.div>
                 )}
 
-                {/* 2. Category selection */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                    {t("Hujjat Kategoriyasi (*)")}
-                  </label>
-                  <select
-                    value={editCategoryId}
-                    onChange={(e) => setEditCategoryId(e.target.value)}
-                    className="w-full bg-white border border-neutral-300 px-3 py-1.5 focus:border-slate-200 cursor-pointer"
-                  >
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{t(c.name)}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 3. Cabinet coordinates */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                      {t("Fizik Shkaf (*)")}
-                    </label>
+                    <label className="field-label">{t("Fizik Shkaf (*)")}</label>
                     <select
                       value={editCabinetId}
                       onChange={(e) => { setEditCabinetId(e.target.value); setEditFloor(1); }}
-                      className="w-full bg-white border border-neutral-300 px-3 py-1.5 focus:border-slate-200 cursor-pointer"
+                      className={editInputClass}
                     >
-                      {cabinets.map(cab => (
+                      {cabinets.map((cab) => (
                         <option key={cab.id} value={cab.id}>{t(cab.name)}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
+                    <label className="field-label">
                       {t("Tokcha (Qavat:")} 1-{selectedCabinetsMaxFloors}) (*)
                     </label>
                     <input
@@ -521,22 +658,19 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
                       max={selectedCabinetsMaxFloors}
                       value={editFloor}
                       onChange={(e) => setEditFloor(Number(e.target.value))}
-                      className="w-full bg-white border border-neutral-300 px-3 py-1.5 focus:border-slate-200 font-mono-normal"
+                      className={`${editInputClass} font-mono-normal`}
                     />
                   </div>
                 </div>
 
-                {/* 4. Notes editing */}
                 <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-neutral-500 mb-1">
-                    {t("Batafsil izoh & ko'rsatmalar")}
-                  </label>
+                  <label className="field-label">{t("Batafsil izoh & ko'rsatmalar")}</label>
                   <textarea
                     value={editNotes}
                     onChange={(e) => setEditNotes(e.target.value)}
                     rows={3}
-                    className="w-full bg-white border border-neutral-300 px-3 py-1.5 focus:border-slate-200"
-                  ></textarea>
+                    className={editInputClass}
+                  />
                 </div>
 
                 {/* 5. PDF replacement file */}
@@ -558,36 +692,35 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
                   )}
                 </div>
 
-                {/* Options panel */}
-                <div className="pt-2 border-t border-neutral-200 flex justify-end gap-2 text-xs">
-                  <button 
-                    type="button" 
-                    onClick={() => setEditDoc(null)} 
-                    className="px-4 py-2 border border-neutral-400 hover:border-slate-200 text-xs font-medium font-bold cursor-pointer"
-                  >
+                <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
+                  <button type="button" onClick={() => setEditDoc(null)} className="btn-secondary">
                     {t("Bekor qilish")}
                   </button>
-                  <button 
-                    type="submit" 
-                    className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 text-xs font-medium font-black cursor-pointer"
-                  >
+                  <button type="submit" className="btn-primary">
                     {t("O'zgarishlarni Saqlash")}
                   </button>
                 </div>
               </form>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* CONFIRM DELETE DIALOG */}
       <AnimatePresence>
         {confirmDeleteId && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} onClick={() => setConfirmDeleteId(null)} className="fixed inset-0 bg-black z-45" />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white border border-slate-200 z-50 p-6 shadow-2xl text-center space-y-4"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-overlay"
+          >
+            <div className="modal-backdrop" onClick={() => setConfirmDeleteId(null)} />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="modal-panel max-w-sm p-6 text-center space-y-4"
             >
               <div className="flex justify-center">
                 <AlertTriangle className="w-10 h-10 text-neutral-900" />
@@ -613,7 +746,7 @@ export default function RepositoryTab({ currentUser }: RepositoryTabProps) {
                 </button>
               </div>
             </motion.div>
-          </>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
