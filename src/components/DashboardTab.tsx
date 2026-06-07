@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import { 
   FileText, 
+  Users,
   FolderOpen, 
   Layers, 
   Calendar, 
@@ -14,8 +15,6 @@ import {
   ArrowRight,
   Database,
   Grid,
-  User,
-  GraduationCap,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
@@ -76,6 +75,8 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
   }
 
   const { counters, categoryStats, cabinetStats, songgiYozuvlar, weeklyData } = stats;
+  const xodimCount = counters.xodimHujjatlari ?? 0;
+  const talabaCount = counters.talabaHujjatlari ?? 0;
 
   // Compute maximum count in weekly data to upscale SVG chart bars
   const maxWeeklyCount = Math.max(...weeklyData.map((d: any) => d.count), 1);
@@ -93,7 +94,7 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
       </div>
 
       {/* 4.3.1. General Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
           {
             title: t("Hujjatlar"),
@@ -106,20 +107,10 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
             borderColor: "border-primary-100 hover:border-primary-400"
           },
           {
-            title: t("Xodim hujjatlari"),
-            value: counters.xodimHujjatlari ?? 0,
-            desc: t("Xodimga bog'langan hujjatlar"),
-            icon: User,
-            colorClass: "text-violet-600",
-            iconColor: "text-violet-500",
-            bgClass: "bg-violet-50/30",
-            borderColor: "border-violet-100 hover:border-violet-400"
-          },
-          {
-            title: t("Talaba hujjatlari"),
-            value: counters.talabaHujjatlari ?? 0,
-            desc: t("Talabaga bog'langan hujjatlar"),
-            icon: GraduationCap,
+            title: t("Bog'langan shaxslar"),
+            value: xodimCount + talabaCount,
+            desc: t("Xodim:") + ` ${xodimCount} · ` + t("Talaba:") + ` ${talabaCount}`,
+            icon: Users,
             colorClass: "text-emerald-600",
             iconColor: "text-emerald-500",
             bgClass: "bg-emerald-50/30",
