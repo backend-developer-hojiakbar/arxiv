@@ -5,6 +5,8 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { enToRu, isBadRussian } from "./en-to-ru.mjs";
+import { EN_OVERRIDES, RU_FROM_EN_OVERRIDES } from "./en-overrides.mjs";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -16,6 +18,80 @@ const cyrlSrc = fs.readFileSync(path.join(root, "src/i18n/cyrillic.ts"), "utf8")
 const entries = Object.fromEntries(
   [...cyrlSrc.matchAll(/^\s+"((?:\\.|[^"\\])+)"\s*:\s*"((?:\\.|[^"\\])*)"/gm)].map(([, k, v]) => [k, v])
 );
+
+/** Keys used in components but missing from cyrillic.ts */
+const EXTRA_ENTRIES = {
+  "-- Talabani tanlang --": "— Талабани танланг —",
+  "2. Hujjat va saqlash parametrlari": "2. Ҳужжат ва сақлаш параметрлари",
+  "Arxiv Kartasi:": "Архив Карти:",
+  "Arxiv shkaflari": "Архив шкафлари",
+  Barchasi: "Барчаси",
+  Bekor: "Бекор",
+  "Chiqarilgan sana & vaqt": "Чиқарилган сана & вақт",
+  "Chop etilgan sana:": "Чоп этилган сана:",
+  "Chop etishda xatolik yuz berdi: ": "Чоп этишда хатолик юз берди: ",
+  "FIZIK JOYLASHUV VOUCHERI": "ФИЗИК ЖОЙЛАШУВ ВАУЧЕРИ",
+  Faol: "Фаол",
+  Foydalanuvchi: "Фойдаланувчи",
+  Ha: "Ҳа",
+  Hujjat: "Ҳужжат",
+  "Hujjat kategoriyalari": "Ҳужжат категориялари",
+  "Hujjat kategoriyalari va arxiv shkaflarini boshqarish": "Ҳужжат категориялари ва архив шкафларини бошқариш",
+  "Hujjat nomi yoki raqamini kiriting": "Ҳужжат номи ёки рақамини киритинг",
+  "Hujjat turi:": "Ҳужжат тури:",
+  "Hujjatlarni oqimlashda xatolik yuz berdi": "Ҳужжатларни юклашда хатолик юз берди",
+  "Hujjatni chiqargan xodim": "Ҳужжатни чиқарган ходим",
+  "Hujjatni yuklab olishda xatolik yuz berdi: ": "Ҳужжатни юклаб олишда хатолик юз берди: ",
+  "Ism, ID yoki hujjat nomi": "Исм, ID ёки ҳужжат номи",
+  Ixtiyoriy: "Ихтиёрий",
+  "Izoh kiritilmagan": "Изоҳ киритилмаган",
+  Joylashuv: "Жойлашув",
+  "Joylashuv tavsifi": "Жойлашув тавсифи",
+  Kategoriya: "Категория",
+  "Kategoriya nomi": "Категория номи",
+  "Maks.": "Макс.",
+  "Maks. qavat": "Макс. қават",
+  "Maksimal qavat": "Максимал қават",
+  "Masalan: 4-shkaf": "Масалан: 4-шкаф",
+  "Masalan: Abduvahobov yoki HEMIS102938": "Масалан: Абдувахобов ёки HEMIS102938",
+  "Masalan: Reyting daftari": "Масалан: Рейтинг дафтари",
+  "Mavjud talabani tanlang!": "Мавжуд талабани танланг!",
+  "Mavjud talabani tanlash": "Мавжуд талабани танлаш",
+  "Mundarija va tizim sozlamalari": "Мундарижа ва тизим созламалари",
+  Nomi: "Номи",
+  "PDF yuklanmoqda...": "PDF юкланмоқда...",
+  "Qabul qilgan xodim": "Қабул қилган ходим",
+  "Qayta yuklash": "Қайта юклаш",
+  "Qidiruv filtrlari": "Қидирув фильтрлари",
+  "Qisqa tavsif": "Қисқа тавсиф",
+  "SHKAF VA TOKCHA COORD:": "ШКАФ ВА ТОКЧА COORD:",
+  SLIP: "ВАУЧЕР",
+  Sana: "Сана",
+  "Shaxs / Hujjat": "Шахс / Ҳужжат",
+  "Shkaf nomi": "Шкаф номи",
+  "Shkafdagi aniq izoh variantlari": "Шкафдаги аниқ изоҳ вариантлари",
+  "Student ID (HEMIS)": "Student ID (HEMIS)",
+  Tavsif: "Тавсиф",
+  Telefon: "Телефон",
+  "Topildi:": "Топилди:",
+  Turi: "Тури",
+  "Xodim ID raqami majburiy": "Ходим ID рақами мажбурий",
+  "Yangi kategoriya": "Янги категория",
+  "Yangi shkaf": "Янги шкаф",
+  "Yangi talaba uchun familiya va ism kiritilishi shart": "Янги талаба учун фамилия ва исм киритилиши шарт",
+  Yangilash: "Янгилаш",
+  hujjat: "ҳужжат",
+  "Fizik shkaf va qavat qidiruvi: Ism, kategoriya yoki o'quvchi kodi orqali qidiring":
+    "Физик шкаф ва қават қидируви: Исм, категория ёки ўқувчи коди орқали қидиринг",
+  Yak: "Як",
+  Dush: "Душ",
+  Sesh: "Сеш",
+  Chor: "Чор",
+  Pay: "Пай",
+  Jum: "Жум",
+  Shan: "Шан",
+};
+Object.assign(entries, EXTRA_ENTRIES);
 
 /** Manual overrides — highest priority */
 const EN = {
@@ -271,9 +347,174 @@ const EN = {
   "Fizik shkafni saralang": "Select physical cabinet",
   "Fizik shkaflar va metall stellajlar": "Physical cabinets and metal shelving",
   "Fizik arxiv xodimlari hisoblari hamda tizimdagi barcha faoliyatlar audit jurnalini nazorat qilish": "Manage archive staff accounts and audit all system activity",
+  "-- Talabani tanlang --": "-- Select student --",
+  "2. Hujjat va saqlash parametrlari": "2. Document and storage parameters",
+  "Arxiv Kartasi:": "Archive card:",
+  "Arxiv shkaflari": "Archive cabinets",
+  Barchasi: "All",
+  Bekor: "Cancel",
+  "Chiqarilgan sana & vaqt": "Issued date & time",
+  "Chop etilgan sana:": "Printed date:",
+  "Chop etishda xatolik yuz berdi: ": "Print error occurred: ",
+  "FIZIK JOYLASHUV VOUCHERI": "PHYSICAL LOCATION VOUCHER",
+  Faol: "Active",
+  Foydalanuvchi: "User",
+  Ha: "Yes",
+  Hujjat: "Document",
+  "Hujjat kategoriyalari": "Document categories",
+  "Hujjat kategoriyalari va arxiv shkaflarini boshqarish": "Document categories and archive cabinet management",
+  "Hujjat nomi yoki raqamini kiriting": "Enter document name or number",
+  "Hujjat turi:": "Document type:",
+  "Hujjatlarni oqimlashda xatolik yuz berdi": "Error loading documents",
+  "Hujjatni chiqargan xodim": "Staff who issued document",
+  "Hujjatni yuklab olishda xatolik yuz berdi: ": "Download document error: ",
+  "Ism, ID yoki hujjat nomi": "Name, ID or document name",
+  Ixtiyoriy: "Optional",
+  "Izoh kiritilmagan": "Note not entered",
+  Joylashuv: "Location",
+  "Joylashuv tavsifi": "Location description",
+  Kategoriya: "Category",
+  "Kategoriya nomi": "Category name",
+  "Maks.": "Max.",
+  "Maks. qavat": "Max. floor",
+  "Maksimal qavat": "Maximum floor",
+  "Masalan: 4-shkaf": "e.g. 4-cabinet",
+  "Masalan: Abduvahobov yoki HEMIS102938": "e.g. Abduvahobov or HEMIS102938",
+  "Masalan: Reyting daftari": "e.g. Rating register",
+  "Mavjud talabani tanlang!": "Select existing student!",
+  "Mavjud talabani tanlash": "Select existing student",
+  "Mundarija va tizim sozlamalari": "Directory and system settings",
+  Nomi: "Name",
+  "PDF yuklanmoqda...": "PDF loading...",
+  "Qabul qilgan xodim": "Staff who accepted",
+  "Qayta yuklash": "Reload",
+  "Qidiruv filtrlari": "Search filters",
+  "Qisqa tavsif": "Short description",
+  "SHKAF VA TOKCHA COORD:": "CABINET AND SHELF COORD:",
+  SLIP: "Voucher",
+  Sana: "Date",
+  "Shaxs / Hujjat": "Person / Document",
+  "Shkaf nomi": "Cabinet name",
+  "Shkafdagi aniq izoh variantlari": "Shelf location description variants",
+  "Student ID (HEMIS)": "Student ID (HEMIS)",
+  Tavsif: "Description",
+  Telefon: "Phone",
+  "Topildi:": "Found:",
+  Turi: "Type",
+  "Xodim ID raqami majburiy": "Staff ID number required",
+  "Yangi kategoriya": "New category",
+  "Yangi shkaf": "New cabinet",
+  "Yangi talaba uchun familiya va ism kiritilishi shart": "Last name and first name required for new student",
+  Yangilash: "Update",
+  hujjat: "document",
+  "Fizik shkaf va qavat qidiruvi: Ism, kategoriya yoki o'quvchi kodi orqali qidiring":
+    "Physical cabinet and shelf search: search by name, category or student code",
+  Yak: "Sunday",
+  Dush: "Monday",
+  Sesh: "Tuesday",
+  Chor: "Wednesday",
+  Pay: "Thursday",
+  Jum: "Friday",
+  Shan: "Saturday",
+  "Statistika & Oqim": "Statistics & workflow",
+  "Tezkor filter tizimi": "Quick filter system",
+  "PDF va Fizik joylashuv": "PDF and physical location",
+  "Kategoriyalar & Shkaflar": "Categories & cabinets",
+  "Audit & Hisoblar": "Audit & accounts",
+  "Bugun Qabul": "Today's intake",
+  "Bugun kiritilgan yangi arxiv hujjatlari": "New archive documents added today",
+  "shkaf ustiga bosib filtrlash": "click cabinet to filter",
+  "Ro'yxatni ko'rish": "View list",
+  "barcha hujjatlar": "all documents",
+  "Talaba:": "Student:",
+  "Xodim:": "Staff:",
+  "Faol hujjatlarni tahrirlash, holatini o'zgartirish, elektron PDF almashtirish va o'chirish boshqaruvi":
+    "Manage active documents, change status, replace electronic PDF and deletion control",
+  "Kategoriya tanlash": "Category selection",
+  "Hujjat ma'lumotlari": "Document data",
+  "Arxiv joylashuvi": "Archive location",
+  "Xulosa va saqlash": "Summary and save",
+  "Soha bo'limini tanlang": "Select field department",
+  "Nomi, maqsad va chiqarilgan yili": "Title, purpose and year of issue",
+  "Maksimal hajm: 30 MB (.pdf)": "Maximum size: 30 MB (.pdf)",
+  "Yakuniy ma'lumotlarni tekshirish": "Final data verification",
+  majburiy: "mandatory",
+  "Kategoriyani tanlang": "Select category",
+  "Tavsif kiritilmagan": "Description not entered",
+  "Yangi Hujjat Qabul Qilish (Intake)": "New document intake (Intake)",
+  "Kompleks talaba ma'lumotlari, PDF yuklash va fizik saqlash koordinatalarini ro'yxatga olish":
+    "Complex student data, PDF upload and physical storage coordinates registration",
+  "Yakuniy xulosa — saqlashdan oldin tekshiring": "Final summary — check before saving",
+  "Tahliliy ma'lumotlarni hisoblashda xatolik yuz berdi": "Error calculating analytical data",
+  "Sessiya tekshirilmoqda...": "Checking session...",
+  "Iltimos, hujjatlarni o'z o'rniga qaytarib qo'ying!": "Please return documents to their place!",
+  "1-Bosqich: Hujjat Kategoriyasi Tanlash": "Step 1: Document category selection",
+  "2-Bosqich: Hujjat ma'lumotlari (Institut)": "Step 2: Document data (Institute)",
+  "2-Bosqich: Hujjat ma'lumotlari (Talaba)": "Step 2: Document data (Student)",
+  "2-Bosqich: Xodim hamda hujjat ma'lumotlari": "Step 2: Staff and document data",
+  "3-Bosqich: Elektron PDF hujjati yuklash": "Step 3: Upload electronic PDF document",
+  "4-Bosqich: Fizik saqlash joylashuvi (Koordinata)": "Step 4: Physical storage location (coordinates)",
+  "5-Bosqich: Arxivga kiritishdan oldin xulosa": "Step 5: Summary before adding to archive",
+  "Kompleks o'quvchi ma'lumotlari, PDF yuklash va fizik saqlash koordinatalarini ro'yxatga olish":
+    "Complex student data, PDF upload and physical storage coordinates registration",
+  "Kategoriyaniturni tanlang (*):": "Select category (*):",
+  "Hujjat qabul qilinishida xatolik yuz berdi": "An error occurred while accepting the document",
+  "Foydalanuvchilar hisoblari": "User accounts",
+  "Arxiv spravochniklari boshqaruvi: Hujjat kategoriyalari hamda shkaflarni sozlash":
+    "Archive directory management: configure document categories and cabinets",
+  "Arxiv Departament": "Archive department",
+  "Arxiv Repozitori": "Archive repository",
+  "Arxivdan Chiqarish": "Check out from archive",
+  "Arxivga Qabul Qilish": "Accept to archive",
+  "Asosiy Panel": "Main panel",
+  "Audat jurnali tozalandi": "Audit log cleared",
+  "Avvalo shkaf tanlang": "Select a cabinet first",
+  "Bajarilgan Amallar": "Actions performed",
+  "Barcha Holatlar": "All statuses",
+  "Barcha Kategoriyalar": "All categories",
+  "Barcha Shkaflar": "All cabinets",
+  "Barcha holatlar": "All statuses",
+  "Barcha kategoriyalar": "All categories",
+  "Barcha shkaflar": "All cabinets",
+  "Baza Ob'ekti": "Database object",
+  "Chiqarilgan sana": "Issue date",
+  "Chiqarilgan sanasi": "Issue date",
+  "Chiqarilgan sanasi (Joriy etilgan) (*)": "Issue date (current) (*)",
+  "Chiqarilgan sanasini kiriting (*)": "Enter issue date (*)",
+  "Chop etiladigan yorliq": "Printable label",
+  "Drop zone": "Drop zone — drag or click to select",
+  "Eksport qilish uchun yozuvlar yo'q": "No records to export",
+  "Elektron PDF faylini almashtirish (Ixtiyoriy)": "Replace electronic PDF file (optional)",
+  "Excel ga yuklash": "Export to Excel",
+  "Excel yuklab olishda xatolik": "Error downloading Excel",
+  "F.I.Sh va tababel rekvizitlari": "Full name and personnel details",
+  "Faol foydalanuvchi": "Active user",
+  "Faol xodim": "Active staff",
+  "Filtrlash & Qidiruv": "Filter & search",
+  "Hujjat qabul qilindi": "Document accepted",
+  "Yangi hujjat kiritish": "Enter new document",
+  "Yangi talaba qo'shish": "Add new student",
+  "Hujjat va talaba ma'lumotlari": "Document and student data",
+  "Arxivdagi talabalar ro'yxatidan tanlang (*)": "Select from archive student list (*)",
+  "Familiyasi (*)": "Last name (*)",
+  "Ismi (*)": "First name (*)",
+  "Otasining ismi": "Patronymic",
+  "Guruh nomi (*)": "Group name (*)",
+  "HEMIS kodi (*)": "HEMIS code (*)",
+  "Telefon raqami": "Phone number",
+  "Hujjat nomi yoki raqamini kiriting (*)": "Enter document name or number (*)",
+  "Arxivdagi xodimlar ro'yxatidan tanlang (*)": "Select from archive staff list (*)",
+  "ID yo'q": "No ID",
+  "Guruh yo'q": "No group",
+  "Bino yoki xonadagi fizik koordinata tavsifi": "Building or room physical coordinate description",
+  "Hujjat vaqtinchalik olib chiqilganligi haqida dalolatnoma yozish": "Write certificate of temporary document removal",
+  "Hujjatni Vaqtinchalik Tashqariga Berish (Rent Act)": "Temporary document checkout (rent act)",
 };
 
+Object.assign(EN, EN_OVERRIDES);
+
 const RU = {
+  ...RU_FROM_EN_OVERRIDES,
   Arxive: "Архив",
   "FJSTI Arxivi": "Архив FJSTI",
   "Arxive. Barcha huquqlar himoyalangan.": "Архив. Все права защищены.",
@@ -324,6 +565,218 @@ const RU = {
   "Arxiv tizimi uchun asosiy spravochniklar, hujjat shakllari va jismoniy shkaf (javon) spetsifikatsiyalari boshqaruvi": "Управление справочниками, типами документов и физическими шкафами архивной системы",
   "QAYTARIB TOPSHIRISH SHARTI: Hujjat vaqtinchalik olinsa, 3 ish kuni ichida qayta joyiga tiklanishi shart!": "УСЛОВИЕ ВОЗВРАТА: при временной выдаче документ должен быть возвращён в течение 3 рабочих дней!",
   "Shkafdagi javon (qavat) (*)": "Полка в шкафу (этаж) (*)",
+  "-- Talabani tanlang --": "— Выберите студента —",
+  "2. Hujjat va saqlash parametrlari": "2. Параметры документа и хранения",
+  "Arxiv Kartasi:": "Архивная карта:",
+  "Arxiv shkaflari": "Архивные шкафы",
+  Barchasi: "Все",
+  Bekor: "Отмена",
+  "Chiqarilgan sana & vaqt": "Дата и время выдачи",
+  "Chop etilgan sana:": "Дата печати:",
+  "Chop etishda xatolik yuz berdi: ": "Ошибка при печати: ",
+  "FIZIK JOYLASHUV VOUCHERI": "ВАУЧЕР ФИЗИЧЕСКОГО РАСПОЛОЖЕНИЯ",
+  Faol: "Активный",
+  Foydalanuvchi: "Пользователь",
+  Foydalanuvchilar: "Пользователи",
+  Ha: "Да",
+  Hujjat: "Документ",
+  "Hujjat kategoriyalari": "Категории документов",
+  "Hujjat kategoriyalari va arxiv shkaflarini boshqarish": "Управление категориями документов и архивными шкафами",
+  "Hujjat nomi yoki raqamini kiriting": "Введите название или номер документа",
+  "Hujjat turi:": "Тип документа:",
+  "Hujjatlarni oqimlashda xatolik yuz berdi": "Ошибка при загрузке документов",
+  "Hujjatni chiqargan xodim": "Сотрудник, выдавший документ",
+  "Hujjatni yuklab olishda xatolik yuz berdi: ": "Ошибка при скачивании документа: ",
+  "Ism, ID yoki hujjat nomi": "Имя, ID или название документа",
+  Ixtiyoriy: "Необязательно",
+  "Izoh kiritilmagan": "Примечание не указано",
+  Joylashuv: "Расположение",
+  "Joylashuv tavsifi": "Описание расположения",
+  Kategoriya: "Категория",
+  "Kategoriya nomi": "Название категории",
+  "Maks.": "Макс.",
+  "Maks. qavat": "Макс. этаж",
+  "Maksimal qavat": "Максимальный этаж",
+  "Masalan: 4-shkaf": "Например: 4-шкаф",
+  "Masalan: Abduvahobov yoki HEMIS102938": "Например: Абдувахобов или HEMIS102938",
+  "Masalan: Reyting daftari": "Например: Рейтинговая книга",
+  "Mavjud talabani tanlang!": "Выберите существующего студента!",
+  "Mavjud talabani tanlash": "Выбор существующего студента",
+  "Mundarija va tizim sozlamalari": "Справочник и настройки системы",
+  Nomi: "Название",
+  "PDF yuklanmoqda...": "Загрузка PDF...",
+  "Qabul qilgan xodim": "Сотрудник, принявший документ",
+  "Qayta yuklash": "Перезагрузить",
+  "Qidiruv filtrlari": "Фильтры поиска",
+  "Qisqa tavsif": "Краткое описание",
+  "SHKAF VA TOKCHA COORD:": "КООРДИНАТЫ ШКАФА И ПОЛКИ:",
+  SLIP: "Ваучер",
+  Sana: "Дата",
+  "Shaxs / Hujjat": "Лицо / Документ",
+  "Shkaf nomi": "Название шкафа",
+  "Shkafdagi aniq izoh variantlari": "Варианты описания расположения на полке",
+  "Student ID (HEMIS)": "Student ID (HEMIS)",
+  Tavsif: "Описание",
+  Telefon: "Телефон",
+  "Topildi:": "Найдено:",
+  Turi: "Тип",
+  "Xodim ID raqami majburiy": "Обязателен ID номер сотрудника",
+  "Yangi kategoriya": "Новая категория",
+  "Yangi shkaf": "Новый шкаф",
+  "Yangi talaba uchun familiya va ism kiritilishi shart": "Для нового студента обязательны фамилия и имя",
+  Yangilash: "Обновить",
+  hujjat: "документ",
+  "Fizik shkaf va qavat qidiruvi: Ism, kategoriya yoki o'quvchi kodi orqali qidiring":
+    "Поиск по физическим шкафам и полкам: ищите по имени, категории или коду студента",
+  Yak: "Вс",
+  Dush: "Пн",
+  Sesh: "Вт",
+  Chor: "Ср",
+  Pay: "Чт",
+  Jum: "Пт",
+  Shan: "Сб",
+  "Statistika & Oqim": "Статистика и активность",
+  "Tezkor filter tizimi": "Система быстрого фильтра",
+  "PDF va Fizik joylashuv": "PDF и физическое расположение",
+  "Inventar & Holat": "Инвентарь и статус",
+  "Kategoriyalar & Shkaflar": "Категории и шкафы",
+  "Audit & Hisoblar": "Аудит и учётные записи",
+  "Bugun Qabul": "Сегодня приём",
+  "Bugun kiritilgan yangi arxiv hujjatlari": "Новые архивные документы, добавленные сегодня",
+  "shkaf ustiga bosib filtrlash": "нажмите на шкаф для фильтрации",
+  "Ro'yxatni ko'rish": "Просмотр списка",
+  "barcha hujjatlar": "все документы",
+  "Talaba:": "Студент:",
+  "Xodim:": "Сотрудник:",
+  "Arxiv tizimining umumiy statistikasi va oxirgi faollik ko'rsatkichlari":
+    "Общая статистика архивной системы и показатели последней активности",
+  "Arxivda saqlanayotgan jami faol hujjatlar": "Всего активных документов в архиве",
+  "Bog'langan shaxslar": "Связанные лица",
+  "Tizimdagi faol mavjud hujjat turlari": "Активные типы документов в системе",
+  "Fizik shkaflar va metall stellajlar": "Физические шкафы и металлические стеллажи",
+  "KATEGORIYALAR BO'YICHA TAQSIMOT": "РАСПРЕДЕЛЕНИЕ ПО КАТЕГОРИЯМ",
+  "OXIRGI 7 KUNLIK QABUL GRAFIGI": "ГРАФИК ПРИЁМА ЗА 7 ДНЕЙ",
+  "foiz ulushi": "доля в процентах",
+  "KUNLIK SONI": "ЕЖЕДНЕВНОЕ КОЛИЧЕСТВО",
+  "ta yozuv": "записей",
+  "ta": "шт.",
+  "Hujjatlarni Tezkor Qidirish": "Быстрый поиск документов",
+  "Sana bo'yicha saralangan (Yangi birinchi)": "Отсортировано по дате (сначала новые)",
+  "Natijalar saralanmoqda...": "Сортировка результатов...",
+  "Xato yuklanish": "Ошибка загрузки",
+  "HECH NARSA TOPILMADI": "НИЧЕГО НЕ НАЙДЕНО",
+  "Kiritilgan filtrlar bo'yicha arxivdan mos yozuvlar topilmadi. Qidiruv kalit so'zlari yoki filtrlarni o'zgartirib ko'ring.":
+    "По заданным фильтрам записи не найдены. Измените ключевые слова или фильтры.",
+  "Hujjatlar Ombori (Inventarizatsiya)": "Хранилище документов (инвентаризация)",
+  "Faol hujjatlarni tahrirlash, holatini o'zgartirish, elektron PDF almashtirish va o'chirish boshqaruvi":
+    "Управление активными документами: редактирование, смена статуса, замена PDF и удаление",
+  "Kategoriya tanlash": "Выбор категории",
+  "Hujjat ma'lumotlari": "Данные документа",
+  "Arxiv joylashuvi": "Архивное расположение",
+  "Xulosa va saqlash": "Итог и сохранение",
+  "Soha bo'limini tanlang": "Выберите отдел сферы",
+  "Nomi, maqsad va chiqarilgan yili": "Название, назначение и год выпуска",
+  "Maksimal hajm: 30 MB (.pdf)": "Максимальный размер: 30 МБ (.pdf)",
+  "Yakuniy ma'lumotlarni tekshirish": "Проверка итоговых данных",
+  majburiy: "обязательно",
+  "Kategoriyani tanlang": "Выберите категорию",
+  "Tavsif kiritilmagan": "Описание не указано",
+  Tanlash: "Выбрать",
+  "Yangi Hujjat Qabul Qilish (Intake)": "Новый приём документов",
+  "Kompleks talaba ma'lumotlari, PDF yuklash va fizik saqlash koordinatalarini ro'yxatga olish":
+    "Комплексный ввод данных студента, загрузка PDF и регистрация координат физического хранения",
+  "Yakuniy xulosa — saqlashdan oldin tekshiring": "Итоговое резюме — проверьте перед сохранением",
+  "Yakuniy ma'lumotlarni tahlil qilish": "Проверка итоговой информации",
+  "Tahliliy ma'lumotlarni hisoblashda xatolik yuz berdi": "Ошибка при расчёте аналитических данных",
+  "Sessiya tekshirilmoqda...": "Проверка сессии...",
+  "Iltimos, hujjatlarni o'z o'rniga qaytarib qo'ying!": "Пожалуйста, верните документы на место!",
+  "Bosh Arxivchi (Admin)": "Главный архивариус (Админ)",
+  "Arxiv Operator": "Оператор архива",
+  "Arxivchi (Viewer)": "Архивариус (просмотр)",
+  "Qavatlar bo'yicha sig'im:": "Вместимость по этажам:",
+  "SO'NGGI QABUL QILINGAN HUJJATLAR": "ПОСЛЕДНИЕ ПРИНЯТЫЕ ДОКУМЕНТЫ",
+  "Natijalar yuklanmoqda...": "Загрузка результатов...",
+  "Ma'lumotlar yuklanmoqda...": "Загрузка данных...",
+  "Shaxs ma'lumotlari": "Данные о лице",
+  "3. Elektron PDF nusxasi ko'rinishi": "3. Просмотр электронной PDF копии",
+  "Hujjat kategoriyasi": "Категория документа",
+  "Hujjat nomi": "Название документа",
+  "Fizik joylashuv": "Физическое расположение",
+  "Batafsil ko'rish": "Подробный просмотр",
+  "O'chirish (Soft delete)": "Удалить (мягкое удаление)",
+  "Ushbu varaq arxiv javonidan hujjat izlash uchun mo'ljallangan.":
+    "Эта страница предназначена для поиска документов в архиве.",
+  qavat: "этаж",
+  "Tavsifi yo'q": "Нет описания",
+  "Hozircha hech qanday kategoriya kiritilmagan": "Категории пока не добавлены",
+  "Hozircha hech qanday shkaf kiritilmagan": "Шкафы пока не добавлены",
+  "Dashboard // Umumiy Statistika": "Панель управления // Общая статистика",
+  "Qidiruv (Search) // Hujjatlar Qidiruvi": "Поиск // Поиск документов",
+  "Hujjat qabul (Intake) // Yangi Hujjat Qo'shish": "Приём документов // Добавить документ",
+  "Hujjatlar ro'yxati // Arxiv Hujjatlari Ombori": "Список документов // Хранилище архивных документов",
+  "Kategoriyalar & Shkaflar // Tizim Spravochniklari": "Категории и шкафы // Системные справочники",
+  "1-Bosqich: Hujjat Kategoriyasi Tanlash": "Шаг 1: Выбор категории документа",
+  "2-Bosqich: Hujjat ma'lumotlari (Institut)": "Шаг 2: Данные документа (Институт)",
+  "2-Bosqich: Hujjat ma'lumotlari (Talaba)": "Шаг 2: Данные документа (Студент)",
+  "2-Bosqich: Xodim hamda hujjat ma'lumotlari": "Шаг 2: Данные сотрудника и документа",
+  "3-Bosqich: Elektron PDF hujjati yuklash": "Шаг 3: Загрузка электронного PDF документа",
+  "4-Bosqich: Fizik saqlash joylashuvi (Koordinata)": "Шаг 4: Физическое расположение хранения (координаты)",
+  "5-Bosqich: Arxivga kiritishdan oldin xulosa": "Шаг 5: Итог перед добавлением в архив",
+  "Kompleks o'quvchi ma'lumotlari, PDF yuklash va fizik saqlash koordinatalarini ro'yxatga olish":
+    "Комплексный ввод данных студента, загрузка PDF и регистрация координат физического хранения",
+  "Kategoriyaniturni tanlang (*):": "Выберите категорию (*):",
+  "Hujjat qabul qilinishida xatolik yuz berdi": "Ошибка при приёме документа",
+  "Foydalanuvchilar hisoblari": "Учётные записи пользователей",
+  "Arxiv spravochniklari boshqaruvi: Hujjat kategoriyalari hamda shkaflarni sozlash":
+    "Управление архивными справочниками: настройка категорий документов и шкафов",
+  "Arxiv Departament": "Архивный отдел",
+  "Arxiv Repozitori": "Архивное хранилище",
+  "Arxivdan Chiqarish": "Выдача из архива",
+  "Arxivga Qabul Qilish": "Приём в архив",
+  "Asosiy Panel": "Главная панель",
+  "Audat jurnali tozalandi": "Журнал аудита очищен",
+  "Avvalo shkaf tanlang": "Сначала выберите шкаф",
+  "Bajarilgan Amallar": "Выполненные действия",
+  "Barcha Holatlar": "Все статусы",
+  "Barcha Kategoriyalar": "Все категории",
+  "Barcha Shkaflar": "Все шкафы",
+  "Barcha holatlar": "Все статусы",
+  "Barcha kategoriyalar": "Все категории",
+  "Barcha shkaflar": "Все шкафы",
+  "Baza Ob'ekti": "Объект базы данных",
+  "Chiqarilgan sana": "Дата выпуска",
+  "Chiqarilgan sanasi": "Дата выпуска",
+  "Chiqarilgan sanasi (Joriy etilgan) (*)": "Дата выпуска (текущая) (*)",
+  "Chiqarilgan sanasini kiriting (*)": "Введите дату выпуска (*)",
+  "Chop etiladigan yorliq": "Печатная этикетка",
+  "Drop zone": "Перетащите или нажмите для выбора",
+  "Eksport qilish uchun yozuvlar yo'q": "Нет записей для экспорта",
+  "Elektron PDF faylini almashtirish (Ixtiyoriy)": "Замена электронного PDF файла (необязательно)",
+  "Excel ga yuklash": "Экспорт в Excel",
+  "Excel yuklab olishda xatolik": "Ошибка при скачивании Excel",
+  "F.I.Sh va tababel rekvizitlari": "ФИО и кадровые реквизиты",
+  "Faol foydalanuvchi": "Активный пользователь",
+  "Faol xodim": "Активный сотрудник",
+  "Filtrlash & Qidiruv": "Фильтрация и поиск",
+  "Hujjat qabul qilindi": "Документ принят",
+  "Yangi hujjat kiritish": "Ввести новый документ",
+  "Yangi talaba qo'shish": "Добавить нового студента",
+  "Hujjat va talaba ma'lumotlari": "Данные документа и студента",
+  "Arxivdagi talabalar ro'yxatidan tanlang (*)": "Выберите из списка студентов архива (*)",
+  "Familiyasi (*)": "Фамилия (*)",
+  "Ismi (*)": "Имя (*)",
+  "Otasining ismi": "Отчество",
+  "Guruh nomi (*)": "Название группы (*)",
+  "HEMIS kodi (*)": "Код HEMIS (*)",
+  "Telefon raqami": "Номер телефона",
+  "Hujjat nomi yoki raqamini kiriting (*)": "Введите название или номер документа (*)",
+  "Arxivdagi xodimlar ro'yxatidan tanlang (*)": "Выберите из списка сотрудников архива (*)",
+  "ID yo'q": "Нет ID",
+  "Guruh yo'q": "Нет группы",
+  "Bino yoki xonadagi fizik koordinata tavsifi": "Описание физических координат в здании или комнате",
+  "Hujjat vaqtinchalik olib chiqilganligi haqida dalolatnoma yozish": "Составление акта о временном изъятии документа",
+  "Hujjatni Vaqtinchalik Tashqariga Berish (Rent Act)": "Временная выдача документа (акт аренды)",
+  "Masalan: xodim yoki admin": "Например: xodim или admin",
 };
 
 /** Cyrillic Uzbek → Russian (phrase-level, longest first) */
@@ -705,20 +1158,36 @@ function toEnglish(key, cyrl) {
   return key;
 }
 
-function toRussian(key, cyrl) {
+function latinKeyToEn(key) {
+  if (EN[key] !== undefined) return EN[key];
+  const phraseHit = EN_PHRASES.find(([f]) => f === key);
+  if (phraseHit) return phraseHit[1];
+  let result = applyPhrases(key, EN_PHRASES);
+  if (result !== key && !CYRILLIC_RE.test(result)) return result;
+  result = applyWords(key, EN_WORDS);
+  if (result !== key && !CYRILLIC_RE.test(result)) return result;
+  return key;
+}
+
+/** Pre-fill RU from clean EN manual entries */
+for (const [key, enVal] of Object.entries(EN)) {
+  if (RU[key] === undefined) RU[key] = enToRu(enVal);
+}
+
+const CYR_TO_RU = {};
+for (const [key, cyrl] of Object.entries(entries)) {
+  if (RU[key]) CYR_TO_RU[cyrl] = RU[key];
+}
+
+function toRussian(key, cyrl, en) {
   if (RU[key] !== undefined) return RU[key];
-  if (RU_PHRASES.some(([f]) => cyrl === f || key === f)) {
-    const hit = RU_PHRASES.find(([f]) => cyrl === f || key === f);
-    return hit[1];
-  }
-  let result = applyPhrases(cyrl, RU_PHRASES);
-  if (result !== cyrl) return result;
-  result = applyWords(cyrl, RU_WORDS);
-  return result;
+  if (cyrl && CYR_TO_RU[cyrl]) return CYR_TO_RU[cyrl];
+  const english = latinKeyToEn(key);
+  return enToRu(english);
 }
 
 // Add branding to cyrillic
-const cyrlOut = { ...entries };
+const cyrlOut = { ...entries, ...EXTRA_ENTRIES };
 cyrlOut.Arxive = "Архив";
 cyrlOut["FJSTI Arxivi"] = "FJSTI Архиви";
 cyrlOut["Arxive. Barcha huquqlar himoyalangan."] = "Архив. Барча ҳуқуқлар ҳимояланган.";
@@ -731,12 +1200,15 @@ const allKeys = [...new Set([...Object.keys(cyrlOut), "Arxive", "FJSTI Arxivi", 
 
 for (const key of allKeys.sort()) {
   const cy = cyrlOut[key] ?? entries[key] ?? key;
-  let en = toEnglish(key, cy);
+  let en = latinKeyToEn(key);
   if (CYRILLIC_RE.test(en)) {
     en = applyWords(cyrillicToLatin(cy), EN_WORDS);
   }
+  if (CYRILLIC_RE.test(en) || en === key) {
+    en = toEnglish(key, cy);
+  }
   if (CYRILLIC_RE.test(en)) en = key;
-  const ru = toRussian(key, cy);
+  const ru = toRussian(key, cy, en);
   cyrlFile += `  "${esc(key)}": "${esc(cy)}",\n`;
   enFile += `  "${esc(key)}": "${esc(en)}",\n`;
   ruFile += `  "${esc(key)}": "${esc(ru)}",\n`;
@@ -751,12 +1223,14 @@ fs.writeFileSync(path.join(root, "src/i18n/english.ts"), enFile);
 fs.writeFileSync(path.join(root, "src/i18n/russian.ts"), ruFile);
 
 // Quality report
-let enBad = 0, ruBad = 0;
+let enBad = 0, ruBad = 0, ruCorrupt = 0;
 const uzPat = /\b(hujjat|arxiv|kategor|shkaf|talaba|xodim|tizim|saqlash|qidiruv|foydalanuvchi|qabul|o'chirish|tahrirlash|ko'rish|yuklanmoqda)\b/i;
 for (const key of allKeys) {
-  const en = toEnglish(key, cyrlOut[key] ?? "");
-  const ru = toRussian(key, cyrlOut[key] ?? "");
-  if (en === key || uzPat.test(en)) enBad++;
+  const cy = cyrlOut[key] ?? "";
+  const en = latinKeyToEn(key);
+  const ru = toRussian(key, cy, en);
+  if ((en === key || uzPat.test(en)) && !EN[key]) enBad++;
   if (!/[А-Яа-яЁё]/.test(ru) && ru === key) ruBad++;
+  if (isBadRussian(ru)) ruCorrupt++;
 }
-console.log(`Built ${allKeys.length} keys. EN needs review: ~${enBad}, RU gaps: ~${ruBad}`);
+console.log(`Built ${allKeys.length} keys. EN needs review: ~${enBad}, RU gaps: ~${ruBad}, RU corrupt: ~${ruCorrupt}`);

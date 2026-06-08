@@ -39,11 +39,7 @@ export function translate(text: string, lang: Language): string {
     return latinToCyrillic(text);
   }
 
-  const latinMatch = lookupDictionary(englishTranslations, text)
-    ?? lookupDictionary(russianTranslations, text);
-  if (latinMatch !== undefined) return latinMatch;
-
-  return latinToCyrillic(text);
+  return text;
 }
 
 export function transliterateText(text: string, targetLang: Language): string {
