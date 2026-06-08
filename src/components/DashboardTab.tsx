@@ -18,13 +18,21 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
+import DocumentListBlock from "./DocumentListBlock.tsx";
 
 interface DashboardTabProps {
   onNavigateToTab: (tab: string, filters?: any) => void;
   dataRevision?: number;
+  currentUser?: any;
+  onDataChange?: () => void;
 }
 
-export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: DashboardTabProps) {
+export default function DashboardTab({
+  onNavigateToTab,
+  dataRevision = 0,
+  currentUser,
+  onDataChange,
+}: DashboardTabProps) {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +82,7 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
     );
   }
 
-  const { counters, categoryStats, cabinetStats, songgiYozuvlar, weeklyData } = stats;
+  const { counters, categoryStats, cabinetStats, weeklyData } = stats;
   const xodimCount = counters.xodimHujjatlari ?? 0;
   const talabaCount = counters.talabaHujjatlari ?? 0;
 
@@ -322,90 +330,17 @@ export default function DashboardTab({ onNavigateToTab, dataRevision = 0 }: Dash
         </div>
       </div>
 
-      {/* Bottom recent activity list */}
-      <div className="border border-slate-200 p-6 space-y-4 bg-white">
-        <div className="flex border-b border-neutral-200 pb-3 justify-between items-center">
-          <h3 className="font-sans font-bold uppercase text-sm tracking-widest text-slate-800 flex items-center gap-2">
-            <Database className="w-4 h-4" /> {t("SO'NGGI QABUL QILINGAN HUJJATLAR")}
-          </h3>
-          <span className="font-mono text-xs text-neutral-500">{t("oxirgi 10 ta")}</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="data-table w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 font-mono text-[11px] uppercase text-neutral-500">
-                <th className="py-2.5 px-3">{t("Sana & Vaqt")}</th>
-                <th className="py-2.5 px-3">{t("Shaxs / Hujjat")}</th>
-                <th className="py-2.5 px-3">{t("Kategoriya")}</th>
-                <th className="py-2.5 px-3">{t("Fizik joylashuvi")}</th>
-                <th className="py-2.5 px-3">{t("Holati")}</th>
-                <th className="py-2.5 px-3 text-right">{t("Amal")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-200 text-xs font-sans">
-              {songgiYozuvlar.map((doc: any) => (
-                <tr 
-                  key={doc.id}
-                  className="hover:bg-neutral-50 transition-colors cursor-pointer group"
-                  onClick={() => onNavigateToTab("documents")}
-                >
-                  <td>
-                    <div className="table-cell-inner text-neutral-500">
-                      {new Date(doc.receivedAt).toLocaleString("uz-UZ", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-cell-inner table-cell-inner--stack group-hover:underline">
-                      <div className="font-medium text-slate-800 text-plain">{doc.personName}</div>
-                      {doc.personSubtitle && (
-                        <div className="text-xs text-slate-500 text-plain">{doc.personSubtitle}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-cell-inner text-neutral-600 text-plain">{doc.categoryName}</div>
-                  </td>
-                  <td>
-                    <div className="table-cell-inner text-neutral-600 text-plain">
-                      {doc.cabinetName !== "—" ? (
-                        <><span className="font-medium">{doc.cabinetName}</span> · <strong className="text-slate-800">{doc.floor}-{t("qavat")}</strong></>
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-cell-inner">
-                      <span className={doc.status === "Joyida" ? "status-badge status-joyida" : doc.status === "Berilgan" ? "status-badge status-berilgan" : "status-badge status-neutral"}>
-                        {t(doc.status)}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="table-cell-inner table-cell-inner--end">
-                      <button className="text-[10px] px-2 py-1 bg-primary-600 text-white rounded">{t("Batafsil ma'lumot va PDF korish")}</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {songgiYozuvlar.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="text-center py-6 text-neutral-400 font-mono">
-                    {t("Hozircha arxiv hujjatlari mavjud emas.")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {currentUser && (
+        <DocumentListBlock
+          currentUser={currentUser}
+          dataRevision={dataRevision}
+          onDataChange={onDataChange}
+          variant="embedded"
+          sectionTitle={t("SO'NGGI QABUL QILINGAN HUJJATLAR")}
+          sectionIcon={<Database className="h-4 w-4" />}
+          sectionBadge={t("barcha hujjatlar")}
+        />
+      )}
     </div>
   );
 }

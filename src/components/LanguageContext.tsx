@@ -341,6 +341,7 @@ const uiTranslations: { [key: string]: string } = {
   "Amal": "Амал",
   "Hozircha arxiv hujjatlari mavjud emas.": "Ҳозирча архив ҳужжатлари мавжуд эмас.",
   "oxirgi 10 ta": "охирги 10 та",
+  "barcha hujjatlar": "барча ҳужжатлар",
 
   // Document statuses
   "Yo'q qilingan": "Йўқ қилинган",

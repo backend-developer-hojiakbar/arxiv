@@ -231,6 +231,8 @@ export default function App() {
                   <DashboardTab
                     onNavigateToTab={handleNavWithFilters}
                     dataRevision={dataRevision}
+                    currentUser={currentUser}
+                    onDataChange={notifyDataChange}
                   />
                 </TabPanel>
               )}
