@@ -236,7 +236,12 @@ export default function App() {
               )}
               {visitedTabs.has("search") && (
                 <TabPanel tabId="search" activeTab={activeTab}>
-                  <SearchTab initialFilters={tabFilters} dataRevision={dataRevision} />
+                  <SearchTab
+                    initialFilters={tabFilters}
+                    dataRevision={dataRevision}
+                    currentUser={currentUser}
+                    onDataChange={notifyDataChange}
+                  />
                 </TabPanel>
               )}
               {isDocRole && visitedTabs.has("intake") && (

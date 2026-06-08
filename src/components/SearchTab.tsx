@@ -10,23 +10,34 @@ import {
   X, 
   Printer, 
   Eye, 
-  FileText, 
-  Calendar, 
   SlidersHorizontal,
-  Bookmark,
   MapPin,
-  FileDown
+  FileDown,
+  Edit3,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
 import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
+import { UserRole } from "../types.ts";
+import DocumentEditModal from "./DocumentEditModal.tsx";
+
+const PAGE_SIZE = 10;
 
 interface SearchTabProps {
   initialFilters?: any;
   dataRevision?: number;
+  currentUser?: any;
+  onDataChange?: () => void;
 }
 
-export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTabProps) {
+export default function SearchTab({
+  initialFilters,
+  dataRevision = 0,
+  currentUser,
+  onDataChange,
+}: SearchTabProps) {
   // Query filters state
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -41,11 +52,14 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
   // Results
   const [documents, setDocuments] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Selected Doc for Drawer
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  const [editDoc, setEditDoc] = useState<any>(null);
   const [printSlipDoc, setPrintSlipDoc] = useState<any>(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
 
@@ -96,12 +110,14 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
       if (initialFilters.categoryId) setCategoryId(initialFilters.categoryId);
       if (initialFilters.cabinetId) setCabinetId(initialFilters.cabinetId);
       // Automatically trigger a search
+      setPage(1);
       searchDocuments({
         categoryId: initialFilters.categoryId,
-        cabinetId: initialFilters.cabinetId
+        cabinetId: initialFilters.cabinetId,
+        page: 1,
       });
     } else {
-      searchDocuments();
+      searchDocuments({ page: 1 });
     }
   }, [initialFilters]);
 
@@ -111,23 +127,30 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
     }
   }, [dataRevision]);
 
-  // Handle Search
-  const searchDocuments = async (overrideParams?: any, background = false) => {
+  const canEdit = currentUser?.role !== UserRole.VIEWER;
+
+  const searchDocuments = async (
+    overrideParams?: { categoryId?: string; cabinetId?: string; docDate?: string; page?: number },
+    background = false
+  ) => {
     if (!background) setLoading(true);
     setError(null);
+    const nextPage = overrideParams?.page ?? page;
     try {
       const filters = {
         q,
         categoryId: overrideParams?.categoryId !== undefined ? overrideParams.categoryId : categoryId,
         cabinetId: overrideParams?.cabinetId !== undefined ? overrideParams.cabinetId : cabinetId,
         docDate: overrideParams?.docDate !== undefined ? overrideParams.docDate : filterDate,
-        page: 1,
-        limit: 100
+        page: nextPage,
+        limit: PAGE_SIZE,
       };
-      
+
       const res = await api.getDocuments(filters);
       setDocuments(res.documents);
       setTotal(res.total);
+      setPage(res.page || nextPage);
+      setTotalPages(res.pages || 1);
     } catch (err: any) {
       setError(err.message || t("Hujjatlarni oqimlashda xatolik yuz berdi"));
     } finally {
@@ -135,20 +158,37 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
     }
   };
 
+  const handleSearch = () => {
+    setPage(1);
+    searchDocuments({ page: 1 });
+  };
+
   const handleReset = () => {
     setQ("");
     setCategoryId("");
     setCabinetId("");
     setFilterDate("");
+    setPage(1);
     setTimeout(() => {
-      searchDocuments({ categoryId: "", cabinetId: "", docDate: "" });
+      searchDocuments({ categoryId: "", cabinetId: "", docDate: "", page: 1 });
     }, 50);
+  };
+
+  const goToPage = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > totalPages) return;
+    setPage(nextPage);
+    searchDocuments({ page: nextPage });
+  };
+
+  const handleEditSaved = () => {
+    onDataChange?.();
+    searchDocuments({ page }, true);
   };
 
   // Keyboard accessibility
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      searchDocuments();
+      handleSearch();
     }
   };
 
@@ -278,7 +318,7 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-          <button onClick={() => searchDocuments()} disabled={loading} className="btn-primary">
+          <button onClick={handleSearch} disabled={loading} className="btn-primary">
             <Search className="w-4 h-4" /> {t("Qidirish")}
           </button>
           <button onClick={handleReset} className="btn-secondary">{t("Tozalash")}</button>
@@ -286,11 +326,16 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
       </div>
 
       {/* Results Title Area */}
-      <div className="flex justify-between items-center text-sm font-mono pb-2 border-b border-primary-100">
+      <div className="flex flex-wrap justify-between items-center gap-2 text-sm pb-2 border-b border-primary-100">
         <div>
-          {t("Topildi:")} <strong className="text-primary-900 font-black">{total} {t("ta yozuv")}</strong>
+          {t("Topildi:")} <strong className="text-primary-900 font-semibold">{total} {t("ta yozuv")}</strong>
+          {totalPages > 1 && (
+            <span className="ml-2 text-slate-500">
+              · {t("Sahifa")} {page}/{totalPages}
+            </span>
+          )}
         </div>
-        <div className="text-neutral-400 text-xs text-right">
+        <div className="text-slate-400 text-xs">
           {t("Sana bo'yicha saralangan (Yangi birinchi)")}
         </div>
       </div>
@@ -368,14 +413,23 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
                     <div className="flex justify-end gap-1.5">
                       <button
                         onClick={() => setSelectedDoc(doc)}
-                        className="p-1.5 border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50/10 text-slate-500 hover:text-primary-600 transition-all flex items-center justify-center cursor-pointer rounded"
-                        title={t("Batafsil ma'lumot va PDF korish")}
+                        className="p-1.5 border border-slate-200 hover:border-primary-400 hover:bg-primary-50 text-slate-500 hover:text-primary-600 transition-all flex items-center justify-center cursor-pointer rounded"
+                        title={t("Batafsil ko'rish")}
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => setEditDoc(doc)}
+                          className="p-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-primary-600 transition-all flex items-center justify-center gap-1 text-[11px] font-medium cursor-pointer rounded"
+                          title={t("Tahrirlash")}
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> {t("Tahrirlash")}
+                        </button>
+                      )}
                       <button
                         onClick={() => handlePrintSlip(doc)}
-                        className="p-1.5 border border-primary-600 bg-primary-600 text-white hover:bg-primary-700 transition-all flex items-center justify-center gap-1 text-[11px] font-medium font-bold cursor-pointer rounded shadow-sm shadow-indigo-100"
+                        className="p-1.5 border border-primary-600 bg-primary-600 text-white hover:bg-primary-700 transition-all flex items-center justify-center gap-1 text-[11px] font-medium cursor-pointer rounded"
                         title={t("Fizik joylashuv voucherini chop etish")}
                       >
                         <Printer className="w-3.5 h-3.5" /> {t("Chop etish")}
@@ -387,6 +441,58 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
               );})}
             </tbody>
           </table>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm">
+              <span className="text-slate-500">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} / {total}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={page <= 1 || loading}
+                  onClick={() => goToPage(page - 1)}
+                  className="btn-secondary !py-1.5 !px-2.5 disabled:opacity-40"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .reduce<(number | "gap")[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("gap");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "gap" ? (
+                      <span key={`gap-${idx}`} className="px-1 text-slate-400">…</span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        disabled={loading}
+                        onClick={() => goToPage(item)}
+                        className={`min-w-[2rem] rounded-lg px-2 py-1.5 text-xs font-medium transition-all ${
+                          page === item
+                            ? "bg-primary-600 text-white"
+                            : "border border-slate-200 text-slate-600 hover:border-primary-300"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
+                <button
+                  type="button"
+                  disabled={page >= totalPages || loading}
+                  onClick={() => goToPage(page + 1)}
+                  className="btn-secondary !py-1.5 !px-2.5 disabled:opacity-40"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -505,10 +611,6 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
                         <span className="text-neutral-800 text-plain">{selectedDoc.category?.name || "—"}</span>
                       </div>
                       <div>
-                        <span className="field-label !mb-0">{t("Hujjat holati")}</span>
-                        <span className={getStatusStyle(selectedDoc.status)}>{t(selectedDoc.status)}</span>
-                      </div>
-                      <div>
                         <span className="field-label !mb-0">{t("Qabul qilgan xodim")}</span>
                         <span className="font-medium text-neutral-800 text-plain">{selectedDoc.receiver?.fullName || "—"}</span>
                       </div>
@@ -594,6 +696,16 @@ export default function SearchTab({ initialFilters, dataRevision = 0 }: SearchTa
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editDoc && (
+          <DocumentEditModal
+            doc={editDoc}
+            onClose={() => setEditDoc(null)}
+            onSaved={handleEditSaved}
+          />
         )}
       </AnimatePresence>
 
