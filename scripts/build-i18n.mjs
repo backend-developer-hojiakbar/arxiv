@@ -90,6 +90,9 @@ const EXTRA_ENTRIES = {
   Pay: "Пай",
   Jum: "Жум",
   Shan: "Шан",
+  "Qo'shish": "Қўшиш",
+  "Yangi foydalanuvchi qo'shish": "Янги фойдаланувчи қўшиш",
+  "Masalan: 1-qavat, o'ng burchak": "Масалан: 1-қават, ўнг бурчак",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 
@@ -625,7 +628,7 @@ const RU = {
   "Yangi shkaf": "Новый шкаф",
   "Yangi talaba uchun familiya va ism kiritilishi shart": "Для нового студента обязательны фамилия и имя",
   Yangilash: "Обновить",
-  hujjat: "документ",
+  hujjat: "док.",
   "Fizik shkaf va qavat qidiruvi: Ism, kategoriya yoki o'quvchi kodi orqali qidiring":
     "Поиск по физическим шкафам и полкам: ищите по имени, категории или коду студента",
   Yak: "Вс",
@@ -1196,7 +1199,13 @@ let cyrlFile = "export const cyrillicTranslations: Record<string, string> = {\n"
 let enFile = "export const englishTranslations: Record<string, string> = {\n";
 let ruFile = "export const russianTranslations: Record<string, string> = {\n";
 
-const allKeys = [...new Set([...Object.keys(cyrlOut), "Arxive", "FJSTI Arxivi", "Arxive. Barcha huquqlar himoyalangan."])];
+const allKeys = [...new Set([
+  ...Object.keys(cyrlOut),
+  ...Object.keys(EN),
+  "Arxive",
+  "FJSTI Arxivi",
+  "Arxive. Barcha huquqlar himoyalangan.",
+])];
 
 for (const key of allKeys.sort()) {
   const cy = cyrlOut[key] ?? entries[key] ?? key;

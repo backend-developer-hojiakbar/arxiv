@@ -120,6 +120,7 @@ export const EN_OVERRIDES = {
   "Administrator": "Administrator",
   "HEMIS ID": "HEMIS ID",
   "HEMIS ID (CODE):": "HEMIS ID (CODE):",
+  hujjat: "doc.",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -228,4 +229,15 @@ export const RU_FROM_EN_OVERRIDES = {
   "Akademik guruh": "Академическая группа",
   "Saqlashda xatolik": "Ошибка при сохранении",
   "Parol uzunligi kamida 8 belgidan iborat bo'lishi shart!": "Пароль должен содержать не менее 8 символов!",
+  "Fizik arxiv xodimlari hisoblarini boshqarish": "Управление учётными записями сотрудников физического архива",
+  "Fizik arxiv xodimlari hisoblari hamda tizimdagi barcha faoliyatlar audit jurnalini nazorat qilish":
+    "Управление учётными записями сотрудников архива и аудит всех действий в системе",
+  "Foydalanuvchi qo'shish": "Добавить пользователя",
+  "Arxivga kiritildi:": "Добавлен в архив:",
+  "Boshlang'ich parol (≥ 8 belgi) (*)": "Начальный пароль (≥ 8 символов) (*)",
+  "Xodim to'liq Ism-Familiyasi (*)": "Полное имя сотрудника (*)",
+  "Xodim Qo'shish": "Добавить сотрудника",
+  "Yangi Mas'ul Xodim Qo'shish": "Добавить нового ответственного сотрудника",
+  hujjat: "док.",
+  "Tavsif kiritilmagan": "Описание не указано",
 };
