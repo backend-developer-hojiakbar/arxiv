@@ -6,22 +6,20 @@
 import React, { useState, useEffect } from "react";
 import { api, fetchDocumentPdf } from "../api.js";
 import { 
-  Search, 
   X, 
   Printer, 
-  Eye, 
-  SlidersHorizontal,
   MapPin,
   FileDown,
-  Edit3,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
 import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
 import { UserRole } from "../types.ts";
 import DocumentEditModal from "./DocumentEditModal.tsx";
+import DocumentFilters from "./DocumentFilters.tsx";
+import DocumentPagination from "./DocumentPagination.tsx";
+import DocumentTableActions from "./DocumentTableActions.tsx";
+import ConfirmDeleteDialog from "./ConfirmDeleteDialog.tsx";
 
 const PAGE_SIZE = 10;
 
@@ -60,6 +58,7 @@ export default function SearchTab({
   // Selected Doc for Drawer
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
   const [editDoc, setEditDoc] = useState<any>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [printSlipDoc, setPrintSlipDoc] = useState<any>(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
 
@@ -128,6 +127,7 @@ export default function SearchTab({
   }, [dataRevision]);
 
   const canEdit = currentUser?.role !== UserRole.VIEWER;
+  const canDelete = currentUser?.role === UserRole.ADMIN;
 
   const searchDocuments = async (
     overrideParams?: { categoryId?: string; cabinetId?: string; docDate?: string; page?: number },
@@ -183,6 +183,21 @@ export default function SearchTab({
   const handleEditSaved = () => {
     onDataChange?.();
     searchDocuments({ page }, true);
+  };
+
+  const handleDeleteDoc = async (id: string) => {
+    setLoading(true);
+    try {
+      await api.deleteDocument(id);
+      onDataChange?.();
+      setConfirmDeleteId(null);
+      setSelectedDoc(null);
+      searchDocuments({ page }, true);
+    } catch (err: any) {
+      alert(err.message || t("O'chirishda muammo sodir bo'ldi"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Keyboard accessibility
@@ -266,64 +281,21 @@ export default function SearchTab({
         </p>
       </div>
 
-      <div className="filter-panel space-y-4">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-primary-600" />
-          <h3 className="text-sm font-semibold text-slate-800">{t("Qidiruv filtrlari")}</h3>
-        </div>
-
-        <div className="filter-grid">
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="field-label">{t("Ism, ID yoki hujjat nomi")}</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder={t("Masalan: Abduvahobov yoki HEMIS102938")}
-                className="w-full border border-slate-300 px-3 py-2 rounded-lg"
-              />
-              {q && (
-                <button onClick={() => setQ("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-primary-600">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="field-label">{t("Kategoriya")}</label>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full border border-slate-300 px-3 py-2 rounded-lg">
-              <option value="">{t("Barchasi")}</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="field-label">{t("Shkaf")}</label>
-            <select value={cabinetId} onChange={(e) => setCabinetId(e.target.value)} className="w-full border border-slate-300 px-3 py-2 rounded-lg">
-              <option value="">{t("Barchasi")}</option>
-              {cabinets.map((cab) => (
-                <option key={cab.id} value={cab.id}>{cab.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="field-label">{t("Sana")}</label>
-            <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border border-slate-300 px-3 py-2 rounded-lg" />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-          <button onClick={handleSearch} disabled={loading} className="btn-primary">
-            <Search className="w-4 h-4" /> {t("Qidirish")}
-          </button>
-          <button onClick={handleReset} className="btn-secondary">{t("Tozalash")}</button>
-        </div>
-      </div>
+      <DocumentFilters
+        q={q}
+        setQ={setQ}
+        categoryId={categoryId}
+        setCategoryId={setCategoryId}
+        cabinetId={cabinetId}
+        setCabinetId={setCabinetId}
+        filterDate={filterDate}
+        setFilterDate={setFilterDate}
+        categories={categories}
+        cabinets={cabinets}
+        loading={loading}
+        onSearch={handleSearch}
+        onReset={handleReset}
+      />
 
       {/* Results Title Area */}
       <div className="flex flex-wrap justify-between items-center gap-2 text-sm pb-2 border-b border-primary-100">
@@ -410,31 +382,14 @@ export default function SearchTab({
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div className="table-cell-inner table-cell-inner--end">
-                    <div className="flex justify-end gap-1.5">
-                      <button
-                        onClick={() => setSelectedDoc(doc)}
-                        className="p-1.5 border border-slate-200 hover:border-primary-400 hover:bg-primary-50 text-slate-500 hover:text-primary-600 transition-all flex items-center justify-center cursor-pointer rounded"
-                        title={t("Batafsil ko'rish")}
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                      {canEdit && (
-                        <button
-                          onClick={() => setEditDoc(doc)}
-                          className="p-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-primary-600 transition-all flex items-center justify-center gap-1 text-[11px] font-medium cursor-pointer rounded"
-                          title={t("Tahrirlash")}
-                        >
-                          <Edit3 className="w-3.5 h-3.5" /> {t("Tahrirlash")}
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handlePrintSlip(doc)}
-                        className="p-1.5 border border-primary-600 bg-primary-600 text-white hover:bg-primary-700 transition-all flex items-center justify-center gap-1 text-[11px] font-medium cursor-pointer rounded"
-                        title={t("Fizik joylashuv voucherini chop etish")}
-                      >
-                        <Printer className="w-3.5 h-3.5" /> {t("Chop etish")}
-                      </button>
-                    </div>
+                    <DocumentTableActions
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                      onView={() => setSelectedDoc(doc)}
+                      onEdit={() => setEditDoc(doc)}
+                      onPrint={() => handlePrintSlip(doc)}
+                      onDelete={() => setConfirmDeleteId(doc.id)}
+                    />
                     </div>
                   </td>
                 </tr>
@@ -442,57 +397,14 @@ export default function SearchTab({
             </tbody>
           </table>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-sm">
-              <span className="text-slate-500">
-                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} / {total}
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  disabled={page <= 1 || loading}
-                  onClick={() => goToPage(page - 1)}
-                  className="btn-secondary !py-1.5 !px-2.5 disabled:opacity-40"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                  .reduce<(number | "gap")[]>((acc, p, idx, arr) => {
-                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("gap");
-                    acc.push(p);
-                    return acc;
-                  }, [])
-                  .map((item, idx) =>
-                    item === "gap" ? (
-                      <span key={`gap-${idx}`} className="px-1 text-slate-400">…</span>
-                    ) : (
-                      <button
-                        key={item}
-                        type="button"
-                        disabled={loading}
-                        onClick={() => goToPage(item)}
-                        className={`min-w-[2rem] rounded-lg px-2 py-1.5 text-xs font-medium transition-all ${
-                          page === item
-                            ? "bg-primary-600 text-white"
-                            : "border border-slate-200 text-slate-600 hover:border-primary-300"
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    )
-                  )}
-                <button
-                  type="button"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => goToPage(page + 1)}
-                  className="btn-secondary !py-1.5 !px-2.5 disabled:opacity-40"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
+          <DocumentPagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            pageSize={PAGE_SIZE}
+            loading={loading}
+            onPageChange={goToPage}
+          />
         </div>
       )}
 
@@ -705,6 +617,12 @@ export default function SearchTab({
             doc={editDoc}
             onClose={() => setEditDoc(null)}
             onSaved={handleEditSaved}
+          />
+        )}
+        {confirmDeleteId && (
+          <ConfirmDeleteDialog
+            onCancel={() => setConfirmDeleteId(null)}
+            onConfirm={() => handleDeleteDoc(confirmDeleteId)}
           />
         )}
       </AnimatePresence>
