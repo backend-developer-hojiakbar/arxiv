@@ -52,7 +52,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               {t("Farg'ona Jamoat Salomatligi Tibbiyot Instituti")}
             </p>
             <h1 className="text-xl font-semibold text-primary-900 mt-0.5">
-              {t("Inkubatsiya va Akseleratsiya markazi")}
+              {t("Arxive")}
             </h1>
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       <div className="w-full max-w-5xl mx-auto border-t border-slate-200 pt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-2">
         <div>
-          &copy; {new Date().getFullYear()} {t("Inkubatsiya va Akseleratsiya markazi. Barcha huquqlar himoyalangan.")}
+          &copy; {new Date().getFullYear()} {t("Arxive. Barcha huquqlar himoyalangan.")}
         </div>
         <div>
           <span>{t("Xavfsizlik sertifikatlangan")}</span>

@@ -202,7 +202,7 @@ export default function App() {
         <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 md:hidden shrink-0 no-print">
           <div className="flex items-center gap-2">
             <AppLogo size="xs" />
-            <h1 className="text-sm font-semibold text-primary-900">{t("Inkubatsiya va Akseleratsiya markazi")}</h1>
+            <h1 className="text-sm font-semibold text-primary-900">{t("FJSTI Arxivi")}</h1>
           </div>
           
           <div className="flex items-center gap-2">
@@ -279,7 +279,7 @@ export default function App() {
         </main>
 
         <footer className="h-9 border-t border-slate-200 bg-white flex items-center justify-end px-6 text-xs text-slate-400 shrink-0 no-print">
-          <span>{t("Inkubatsiya va Akseleratsiya markazi")} &copy; {new Date().getFullYear()}</span>
+          <span>{t("FJSTI Arxivi")} &copy; {new Date().getFullYear()}</span>
         </footer>
       </div>
     </div>
