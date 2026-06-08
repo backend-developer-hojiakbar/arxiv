@@ -16,6 +16,7 @@ import { api, removeAuthToken } from "./api.ts";
 import { UserRole } from "./types.ts";
 import { Menu, Languages } from "lucide-react";
 import { useTranslation } from "./components/LanguageContext.tsx";
+import AppLogo from "./components/AppLogo.tsx";
 
 const VALID_TABS = new Set(["dashboard", "search", "intake", "documents", "settings", "admin"]);
 
@@ -171,7 +172,8 @@ export default function App() {
   if (authState === "loading") {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-slate-100">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-4">
+          <AppLogo size="lg" />
           <div className="w-8 h-8 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
           <span className="text-sm text-slate-500">{t("Sessiya tekshirilmoqda...")}</span>
         </div>
@@ -198,9 +200,7 @@ export default function App() {
         
         <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 md:hidden shrink-0 no-print">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary-600 text-white flex items-center justify-center font-semibold text-xs rounded-lg">
-              А
-            </div>
+            <AppLogo size="xs" />
             <h1 className="text-sm font-semibold text-primary-900">{t("Institut Arxivi")}</h1>
           </div>
           

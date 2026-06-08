@@ -4,14 +4,9 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { api, fetchDocumentPdf } from "../api.js";
-import { 
-  X, 
-  Printer, 
-  MapPin,
-  FileDown,
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { api } from "../api.js";
+import { X } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
 import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
 import { UserRole } from "../types.ts";
@@ -20,6 +15,7 @@ import DocumentFilters from "./DocumentFilters.tsx";
 import DocumentPagination from "./DocumentPagination.tsx";
 import DocumentTableActions from "./DocumentTableActions.tsx";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog.tsx";
+import DocumentDetailDrawer from "./DocumentDetailDrawer.tsx";
 
 const PAGE_SIZE = 10;
 
@@ -60,33 +56,6 @@ export default function SearchTab({
   const [editDoc, setEditDoc] = useState<any>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [printSlipDoc, setPrintSlipDoc] = useState<any>(null);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!selectedDoc) {
-      setPdfPreviewUrl(null);
-      return;
-    }
-
-    let objectUrl: string | null = null;
-    let cancelled = false;
-
-    fetchDocumentPdf(selectedDoc.id)
-      .then((blob) => {
-        if (!cancelled) {
-          objectUrl = URL.createObjectURL(blob);
-          setPdfPreviewUrl(objectUrl);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setPdfPreviewUrl(null);
-      });
-
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [selectedDoc?.id]);
 
   // Load categories & cabinets for filters
   useEffect(() => {
@@ -213,60 +182,6 @@ export default function SearchTab({
     setTimeout(() => {
       window.print();
     }, 300);
-  };
-
-  // Download PDF file cleanly
-  const handleDownloadPdf = async (doc: any) => {
-    try {
-      const blob = await fetchDocumentPdf(doc.id);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = doc.originalFilename || `hujjat_${doc.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      alert(t("Hujjatni yuklab olishda xatolik yuz berdi: ") + err.message);
-    }
-  };
-
-  // Print PDF file cleanly
-  const handlePrintPdf = async (doc: any) => {
-    try {
-      const blob = await fetchDocumentPdf(doc.id);
-      const url = window.URL.createObjectURL(blob);
-
-      const iframe = document.createElement("iframe");
-      iframe.style.position = "fixed";
-      iframe.style.right = "0";
-      iframe.style.bottom = "0";
-      iframe.style.width = "0";
-      iframe.style.height = "0";
-      iframe.style.border = "none";
-      iframe.src = url;
-      document.body.appendChild(iframe);
-
-      iframe.onload = () => {
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            window.URL.revokeObjectURL(url);
-          }, 2000);
-        } catch (e) {
-          console.error("Iframe printing blocked", e);
-          const newWindow = window.open(url, "_blank");
-          if (!newWindow) {
-            alert(t("Iltimos, qalqib chiquvchi oynalar (popup) bloklanishini o'chiring!"));
-          }
-        }
-      };
-    } catch (err: any) {
-      alert(t("Chop etishda xatolik yuz berdi: ") + err.message);
-    }
   };
 
   return (
@@ -408,206 +323,18 @@ export default function SearchTab({
         </div>
       )}
 
-      {/* Slideover detail drawer for Document & PDF viewing */}
       <AnimatePresence>
         {selectedDoc && (
-          <>
-            {/* Backdrop */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedDoc(null)}
-              className="fixed inset-0 bg-primary-900/30 backdrop-blur-xs z-40"
-            ></motion.div>
-            
-            {/* Panel */}
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-2xl bg-white border-l border-primary-100 z-50 p-6 shadow-2xl overflow-y-auto flex flex-col justify-between selection:bg-primary-600 selection:text-white"
-            >
-              <div>
-                <div className="flex justify-between items-start border-b border-primary-100 pb-4 mb-6">
-                  <div>
-                    <span className="text-xs font-medium font-bold bg-primary-600 text-white px-2 py-0.5 tracking-wider rounded">
-                      {t("Arxiv Kartasi:")} {selectedDoc.id}
-                    </span>
-                    <h3 className="text-lg font-display font-black text-primary-900 uppercase tracking-tight mt-2 leading-tight">
-                      {t("Hujjat haqida batafsil ma'lumot")}
-                    </h3>
-                  </div>
-                  <button 
-                    onClick={() => setSelectedDoc(null)}
-                    className="p-1.5 border border-slate-200 text-slate-500 hover:text-primary-600 hover:bg-indigo-50/20 rounded cursor-pointer transition-all"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Visual Location highlight first */}
-                  <div className="border border-primary-100 bg-indigo-50/10 rounded-xl p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 border border-indigo-200 bg-primary-600 text-white flex items-center justify-center font-bold rounded-lg shadow-sm">
-                        <MapPin className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <span className="field-label !mb-0">{t("Fizik joylashuv")}</span>
-                        <strong className="text-primary-900 text-base text-plain">
-                          {selectedDoc.cabinet?.name}, {selectedDoc.floor}-{t("qavat")}
-                        </strong>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => handlePrintSlip(selectedDoc)}
-                      className="border border-indigo-200 bg-white hover:bg-indigo-50/20 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-indigo-700 rounded-lg transition-all"
-                    >
-                      <Printer className="w-3.5 h-3.5" /> {t("SLIP")}
-                    </button>
-                  </div>
-
-                  {(() => {
-                    const person = getDocumentPersonLabel(selectedDoc);
-                    return (
-                  <div className="info-block space-y-3">
-                    <h4 className="card-section-title">{t("Shaxs ma'lumotlari")}</h4>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-                      <div>
-                        <span className="field-label !mb-0">{t("F.I.Sh.")}</span>
-                        <span className="font-semibold text-slate-800 text-plain">{person.name}</span>
-                      </div>
-                      <div>
-                        <span className="field-label !mb-0">{t("Turi")}</span>
-                        <span className="text-slate-700">{person.subtitle}</span>
-                      </div>
-                      {person.type === "student" && selectedDoc.student && (
-                        <>
-                          <div>
-                            <span className="field-label !mb-0">{t("Guruh")}</span>
-                            <span className="text-plain">{selectedDoc.student.groupName || "—"}</span>
-                          </div>
-                          <div>
-                            <span className="field-label !mb-0">{t("Telefon")}</span>
-                            <span className="text-plain">{selectedDoc.student.phone || "—"}</span>
-                          </div>
-                        </>
-                      )}
-                      {person.type === "employee" && selectedDoc.employee && (
-                        <div>
-                          <span className="field-label !mb-0">{t("Bo'lim")}</span>
-                          <span className="text-plain">{selectedDoc.employee.department || "—"}</span>
-                        </div>
-                      )}
-                      {person.type === "institut" && (
-                        <div className="col-span-2">
-                          <span className="field-label !mb-0">{t("Hujjat nomi")}</span>
-                          <span className="text-plain">{selectedDoc.docName || "—"}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                    );
-                  })()}
-
-                  {/* Document details */}
-                  <div className="space-y-2">
-                    <h4 className="font-mono text-xs uppercase text-neutral-500 tracking-wider font-bold border-b border-neutral-100 pb-1">
-                      {t("2. Hujjat va saqlash parametrlari")}
-                    </h4>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-                      <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase font-semibold">{t("Hujjat kategoriyasi")}</span>
-                        <span className="text-neutral-800 text-plain">{selectedDoc.category?.name || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="field-label !mb-0">{t("Qabul qilgan xodim")}</span>
-                        <span className="font-medium text-neutral-800 text-plain">{selectedDoc.receiver?.fullName || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Qabul qilingan sana & vaqt")}</span>
-                        <span className="font-mono text-neutral-600 text-xs">
-                          {new Date(selectedDoc.receivedAt).toLocaleString("uz-UZ")}
-                        </span>
-                      </div>
-                      {selectedDoc.status === "Berilgan" && (
-                        <>
-                          <div>
-                            <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Hujjatni chiqargan xodim")}</span>
-                            <span className="font-medium text-slate-800 text-plain">{selectedDoc.issuer?.fullName || "—"}</span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Chiqarilgan sana & vaqt")}</span>
-                            <span className="font-mono text-neutral-600 text-xs">
-                              {new Date(selectedDoc.issuedAt).toLocaleString("uz-UZ")}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                      <div className="col-span-2">
-                        <span className="block text-[10px] font-mono text-neutral-400 uppercase">{t("Shkafdagi aniq izoh variantlari")}</span>
-                        <p className="text-neutral-700 bg-neutral-50 px-3 py-2 border border-neutral-200 text-xs italic">
-                          {selectedDoc.notes || t("Izoh kiritilmagan")}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Raw Interactive PDF preview iframe */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center border-b border-neutral-100 pb-1">
-                      <h4 className="font-mono text-xs uppercase text-neutral-500 tracking-wider font-bold">
-                        {t("3. Elektron PDF nusxasi ko'rinishi")}
-                      </h4>
-                      <span className="font-mono text-[9px] text-neutral-400">
-                        {selectedDoc.originalFilename} ({(selectedDoc.fileSize / 1024).toFixed(1)} KB)
-                      </span>
-                    </div>
-                    {/* Render Real interactive local PDF inside iframe, fallback to message */}
-                    <div className="border border-primary-100 rounded-xl overflow-hidden bg-neutral-50 relative">
-                      {pdfPreviewUrl ? (
-                        <iframe 
-                          src={pdfPreviewUrl} 
-                          className="w-full h-80 z-10 relative bg-white" 
-                          title="PDF file preview"
-                        ></iframe>
-                      ) : (
-                        <div className="w-full h-80 flex items-center justify-center text-sm text-slate-500">
-                          {t("PDF yuklanmoqda...")}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="sticky bottom-0 bg-white border-t border-neutral-200 pt-4 mt-6 flex flex-col sm:flex-row gap-2">
-                <button 
-                  type="button"
-                  onClick={() => handleDownloadPdf(selectedDoc)}
-                  className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-mono text-xs uppercase tracking-wider font-bold text-center flex-1 cursor-pointer rounded flex items-center justify-center gap-1.5 transition-all text-xs"
-                >
-                  <FileDown className="w-4 h-4" /> {t("Yuklab olish")}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => handlePrintPdf(selectedDoc)}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs uppercase tracking-wider font-bold text-center flex-1 cursor-pointer rounded flex items-center justify-center gap-1.5 transition-all text-xs"
-                >
-                  <Printer className="w-4 h-4" /> {t("Chop etish")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedDoc(null)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-xs uppercase tracking-wider font-bold flex-1 cursor-pointer rounded-lg text-center transition-all text-xs"
-                >
-                  {t("Yopish")}
-                </button>
-              </div>
-            </motion.div>
-          </>
+          <DocumentDetailDrawer
+            doc={selectedDoc}
+            onClose={() => setSelectedDoc(null)}
+            onPrintSlip={handlePrintSlip}
+            canEdit={canEdit}
+            onEdit={() => {
+              setSelectedDoc(null);
+              setEditDoc(selectedDoc);
+            }}
+          />
         )}
       </AnimatePresence>
 

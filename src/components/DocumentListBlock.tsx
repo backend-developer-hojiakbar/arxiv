@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { api, fetchDocumentPdf } from "../api.js";
+import { api } from "../api.js";
 import { UserRole } from "../types.js";
-import { FileText, MapPin, X, FileDown, Printer } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { X } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
 import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
 import DocumentEditModal from "./DocumentEditModal.tsx";
@@ -15,6 +15,7 @@ import DocumentFilters from "./DocumentFilters.tsx";
 import DocumentPagination from "./DocumentPagination.tsx";
 import DocumentTableActions from "./DocumentTableActions.tsx";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog.tsx";
+import DocumentDetailDrawer from "./DocumentDetailDrawer.tsx";
 
 const PAGE_SIZE = 10;
 
@@ -171,47 +172,6 @@ export default function DocumentListBlock({
   const handlePrintSlip = (doc: any) => {
     setPrintSlipDoc(doc);
     setTimeout(() => window.print(), 300);
-  };
-
-  const handleDownloadPdf = async (doc: any) => {
-    try {
-      const blob = await fetchDocumentPdf(doc.id);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = doc.originalFilename || `hujjat_${doc.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      alert(t("Hujjatni yuklab olishda xatolik yuz berdi: ") + err.message);
-    }
-  };
-
-  const handlePrintPdf = async (doc: any) => {
-    try {
-      const blob = await fetchDocumentPdf(doc.id);
-      const url = window.URL.createObjectURL(blob);
-      const iframe = document.createElement("iframe");
-      iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:none";
-      iframe.src = url;
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            window.URL.revokeObjectURL(url);
-          }, 2000);
-        } catch {
-          window.open(url, "_blank");
-        }
-      };
-    } catch (err: any) {
-      alert(t("Chop etishda xatolik yuz berdi: ") + err.message);
-    }
   };
 
   const content = (
@@ -371,101 +331,16 @@ export default function DocumentListBlock({
 
       <AnimatePresence>
         {inspectDoc && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setInspectDoc(null)}
-              className="fixed inset-0 z-45 bg-black"
-            />
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "tween" }}
-              className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-xl flex-col justify-between overflow-y-auto border-l-2 border-slate-200 bg-white p-6 shadow-2xl"
-            >
-              <div className="space-y-6">
-                <div className="flex items-start justify-between border-b border-slate-200 pb-4">
-                  <div>
-                    <span className="border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs font-medium text-slate-800">
-                      {t("Arxiv Kartasi:")} {inspectDoc.id}
-                    </span>
-                    <h3 className="mt-1 text-lg font-semibold text-slate-800">{t("Hujjat haqida batafsil ma'lumot")}</h3>
-                  </div>
-                  <button type="button" onClick={() => setInspectDoc(null)} className="cursor-pointer border border-slate-200 p-1 hover:bg-neutral-50">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="space-y-4 text-xs">
-                  <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-neutral-50 p-3">
-                    <MapPin className="h-5 w-5 text-slate-800" />
-                    <div>
-                      <span className="field-label !mb-0">{t("Fizik joylashuv")}</span>
-                      <strong className="text-sm text-slate-800 text-plain">
-                        {inspectDoc.cabinet?.name}, {inspectDoc.floor}-{t("qavat")}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {(() => {
-                    const person = getDocumentPersonLabel(inspectDoc);
-                    return (
-                      <div className="info-block space-y-2 border-b border-neutral-100 pb-3">
-                        <h4 className="card-section-title">{t("Shaxs ma'lumotlari")}</h4>
-                        <p className="text-sm font-semibold text-slate-800 text-plain">{person.name}</p>
-                        <p className="text-sm text-slate-600 text-plain">{person.subtitle}</p>
-                      </div>
-                    );
-                  })()}
-
-                  <div className="grid grid-cols-2 gap-2 border-b border-neutral-100 pb-3">
-                    <div>
-                      <span className="field-label !mb-0">{t("Hujjat kategoriyasi")}</span>
-                      <span className="text-plain">{inspectDoc.category?.name || "—"}</span>
-                    </div>
-                    <div>
-                      <span className="field-label !mb-0">{t("Qabul qilgan xodim")}</span>
-                      <span className="text-plain">{inspectDoc.receiver?.fullName || "—"}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <span className="field-label">{t("Yuklangan elektron fayl:")}</span>
-                    <div className="flex items-center gap-2 rounded border border-neutral-200 bg-neutral-50 p-2">
-                      <FileText className="h-5 w-5 text-primary-500" />
-                      <div className="flex-1 truncate font-mono text-[11px] font-bold text-neutral-700">
-                        {inspectDoc.originalFilename} ({(inspectDoc.fileSize / 1024).toFixed(1)} KB)
-                      </div>
-                      <button type="button" onClick={() => handleDownloadPdf(inspectDoc)} className="btn-primary !py-1 !px-2 !text-xs">
-                        <FileDown className="h-3 w-3" /> {t("Yuklab olish")}
-                      </button>
-                      <button type="button" onClick={() => handlePrintPdf(inspectDoc)} className="rounded bg-emerald-600 px-2 py-1 text-xs text-white hover:bg-emerald-700">
-                        <Printer className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 border-t border-neutral-200 pt-4">
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => { setInspectDoc(null); setEditDoc(inspectDoc); }}
-                    className="btn-secondary flex-1"
-                  >
-                    {t("Tahrirlash")}
-                  </button>
-                )}
-                <button type="button" onClick={() => setInspectDoc(null)} className="btn-primary flex-1">
-                  {t("Yopish")}
-                </button>
-              </div>
-            </motion.div>
-          </>
+          <DocumentDetailDrawer
+            doc={inspectDoc}
+            onClose={() => setInspectDoc(null)}
+            onPrintSlip={handlePrintSlip}
+            canEdit={canEdit}
+            onEdit={() => {
+              setInspectDoc(null);
+              setEditDoc(inspectDoc);
+            }}
+          />
         )}
       </AnimatePresence>
 

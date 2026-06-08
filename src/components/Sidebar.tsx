@@ -16,6 +16,7 @@ import {
   X
 } from "lucide-react";
 import { useTranslation } from "./LanguageContext.tsx";
+import AppLogo from "./AppLogo.tsx";
 
 interface SidebarProps {
   currentUser: any;
@@ -45,9 +46,7 @@ export default function Sidebar({ currentUser, activeTab, onTabChange, onLogout,
       <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-primary-900">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-white/15 text-white flex items-center justify-center font-semibold text-base rounded-lg">
-              А
-            </div>
+            <AppLogo size="sm" className="ring-2 ring-white/20" />
             <div>
               <h1 className="text-base font-semibold text-white leading-tight">{t("Institut Arxivi")}</h1>
               <p className="text-[11px] text-blue-200 mt-0.5">{t("Boshqaruv Tizimi")}</p>
