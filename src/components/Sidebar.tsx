@@ -48,7 +48,7 @@ export default function Sidebar({ currentUser, activeTab, onTabChange, onLogout,
           <div className="flex items-center gap-2.5">
             <AppLogo size="sm" className="ring-2 ring-white/20" />
             <div>
-              <h1 className="text-base font-semibold text-white leading-tight">{t("Institut Arxivi")}</h1>
+              <h1 className="text-base font-semibold text-white leading-tight">{t("Inkubatsiya va Akseleratsiya markazi")}</h1>
               <p className="text-[11px] text-blue-200 mt-0.5">{t("Boshqaruv Tizimi")}</p>
             </div>
           </div>

@@ -5,9 +5,10 @@
 
 import React, { useState } from "react";
 import { api } from "../api.js";
-import { LogIn, Languages } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
+import LanguageToggle from "./LanguageToggle.tsx";
 import AppLogo from "./AppLogo.tsx";
 
 interface LoginScreenProps {
@@ -51,29 +52,13 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               {t("Farg'ona Jamoat Salomatligi Tibbiyot Instituti")}
             </p>
             <h1 className="text-xl font-semibold text-primary-900 mt-0.5">
-              {t("Institut Arxivi")}
+              {t("Inkubatsiya va Akseleratsiya markazi")}
             </h1>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="flex items-center border border-slate-200 rounded-lg bg-white p-0.5 text-xs">
-            <Languages className="w-3.5 h-3.5 text-slate-400 mx-2" />
-            <button
-              type="button"
-              onClick={() => setLang("cyrillic")}
-              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer font-medium ${lang === "cyrillic" ? "bg-primary-600 text-white" : "text-slate-500"}`}
-            >
-              Кирил
-            </button>
-            <button
-              type="button"
-              onClick={() => setLang("latin")}
-              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer font-medium ${lang === "latin" ? "bg-primary-600 text-white" : "text-slate-500"}`}
-            >
-              Lotin
-            </button>
-          </div>
+          <LanguageToggle lang={lang} setLang={setLang} />
           <span className="hidden md:block text-xs text-slate-400">
             {t("Hujjatlarni boshqarish tizimi")}
           </span>
@@ -164,7 +149,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
       <div className="w-full max-w-5xl mx-auto border-t border-slate-200 pt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-2">
         <div>
-          &copy; {new Date().getFullYear()} {t("Institut Axivi Bo'limi. barcha huquqlar himoyalangan.")}
+          &copy; {new Date().getFullYear()} {t("Inkubatsiya va Akseleratsiya markazi. Barcha huquqlar himoyalangan.")}
         </div>
         <div>
           <span>{t("Xavfsizlik sertifikatlangan")}</span>

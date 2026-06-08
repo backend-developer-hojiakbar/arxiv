@@ -808,6 +808,9 @@ export function createV1Router(): Router {
       res.status(404).json({ error: "Kategoriya topilmadi" });
       return;
     }
+    db.documents = db.documents.filter(
+      (d) => !(d.deletedAt && d.categoryId === req.params.id)
+    );
     db.categories.splice(catIndex, 1);
     writeDB(db);
     res.status(204).send();
@@ -915,6 +918,9 @@ export function createV1Router(): Router {
       res.status(404).json({ error: "Shkaf topilmadi" });
       return;
     }
+    db.documents = db.documents.filter(
+      (d) => !(d.deletedAt && d.cabinetId === req.params.id)
+    );
     db.cabinets.splice(cabIndex, 1);
     writeDB(db);
     res.status(204).send();

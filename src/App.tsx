@@ -14,8 +14,9 @@ import SettingsTab from "./components/SettingsTab.tsx";
 import AdminTab from "./components/AdminTab.tsx";
 import { api, removeAuthToken } from "./api.ts";
 import { UserRole } from "./types.ts";
-import { Menu, Languages } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useTranslation } from "./components/LanguageContext.tsx";
+import LanguageToggle from "./components/LanguageToggle.tsx";
 import AppLogo from "./components/AppLogo.tsx";
 
 const VALID_TABS = new Set(["dashboard", "search", "intake", "documents", "settings", "admin"]);
@@ -201,11 +202,11 @@ export default function App() {
         <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 md:hidden shrink-0 no-print">
           <div className="flex items-center gap-2">
             <AppLogo size="xs" />
-            <h1 className="text-sm font-semibold text-primary-900">{t("Institut Arxivi")}</h1>
+            <h1 className="text-sm font-semibold text-primary-900">{t("Inkubatsiya va Akseleratsiya markazi")}</h1>
           </div>
           
           <div className="flex items-center gap-2">
-            <LangToggle lang={lang} setLang={setLang} compact />
+            <LanguageToggle lang={lang} setLang={setLang} compact />
             <button 
               onClick={() => setSidebarOpen(true)} 
               className="btn-secondary !py-1.5 !px-2.5 !text-xs"
@@ -220,7 +221,7 @@ export default function App() {
             {t(TAB_TITLES[activeTab] || "")}
           </h2>
           
-          <LangToggle lang={lang} setLang={setLang} />
+          <LanguageToggle lang={lang} setLang={setLang} />
         </header>
 
         <main className="flex-1 overflow-y-auto bg-slate-100">
@@ -278,35 +279,10 @@ export default function App() {
         </main>
 
         <footer className="h-9 border-t border-slate-200 bg-white flex items-center justify-end px-6 text-xs text-slate-400 shrink-0 no-print">
-          <span>{t("Arxiv Departament")} &copy; {new Date().getFullYear()}</span>
+          <span>{t("Inkubatsiya va Akseleratsiya markazi")} &copy; {new Date().getFullYear()}</span>
         </footer>
       </div>
     </div>
   );
 }
 
-function LangToggle({ lang, setLang, compact }: { lang: string; setLang: (l: "cyrillic" | "latin") => void; compact?: boolean }) {
-  return (
-    <div className={`flex items-center border border-slate-200 rounded-lg bg-slate-50 p-0.5 ${compact ? "text-[10px]" : "text-xs"}`}>
-      {!compact && (
-        <span className="text-slate-500 font-medium px-2 flex items-center gap-1">
-          <Languages className="w-3.5 h-3.5" />
-        </span>
-      )}
-      <button
-        type="button"
-        onClick={() => setLang("cyrillic")}
-        className={`px-2 py-1 rounded-md transition-all cursor-pointer font-medium ${lang === "cyrillic" ? "bg-primary-600 text-white" : "text-slate-500 hover:text-slate-700"}`}
-      >
-        Кирил
-      </button>
-      <button
-        type="button"
-        onClick={() => setLang("latin")}
-        className={`px-2 py-1 rounded-md transition-all cursor-pointer font-medium ${lang === "latin" ? "bg-primary-600 text-white" : "text-slate-500 hover:text-slate-700"}`}
-      >
-        Lotin
-      </button>
-    </div>
-  );
-}
