@@ -28,7 +28,8 @@ import {
   type ExpiryFilter,
   type SortDir,
   cycleExpiryFilter,
-  expiryFilterToQuery,
+  expiryFilterSublabel,
+  filterDocumentsByExpiry,
   sortDocuments,
   toggleSortKey,
 } from "../utils/tableSort.ts";
@@ -121,7 +122,6 @@ export default function DocumentListBlock({
       cabinetId?: string;
       docDate?: string;
       page?: number;
-      expiryFilter?: ExpiryFilter;
     },
     background = false
   ) => {
@@ -129,13 +129,11 @@ export default function DocumentListBlock({
     setError(null);
     const nextPage = overrideParams?.page ?? page;
     try {
-      const activeExpiryFilter = overrideParams?.expiryFilter ?? expiryFilter;
       const res = await api.getDocuments({
         q,
         categoryId: overrideParams?.categoryId !== undefined ? overrideParams.categoryId : categoryId,
         cabinetId: overrideParams?.cabinetId !== undefined ? overrideParams.cabinetId : cabinetId,
         docDate: overrideParams?.docDate !== undefined ? overrideParams.docDate : filterDate,
-        expired: expiryFilterToQuery(activeExpiryFilter),
         page: nextPage,
         limit: PAGE_SIZE,
       });
@@ -163,15 +161,12 @@ export default function DocumentListBlock({
     setExpiryFilter("all");
     setPage(1);
     setTimeout(() => {
-      searchDocuments({ categoryId: "", cabinetId: "", docDate: "", page: 1, expiryFilter: "all" });
+      searchDocuments({ categoryId: "", cabinetId: "", docDate: "", page: 1 });
     }, 50);
   };
 
   const handleExpiryFilterCycle = () => {
-    const next = cycleExpiryFilter(expiryFilter);
-    setExpiryFilter(next);
-    setPage(1);
-    searchDocuments({ page: 1, expiryFilter: next });
+    setExpiryFilter((current) => cycleExpiryFilter(current));
   };
 
   const goToPage = (nextPage: number) => {
@@ -215,10 +210,10 @@ export default function DocumentListBlock({
     setSortDir(next.dir);
   };
 
-  const sortedDocuments = useMemo(
-    () => sortDocuments(documents, sortKey, sortDir),
-    [documents, sortKey, sortDir]
-  );
+  const sortedDocuments = useMemo(() => {
+    const filtered = filterDocumentsByExpiry(documents, expiryFilter);
+    return sortDocuments(filtered, sortKey, sortDir);
+  }, [documents, expiryFilter, sortKey, sortDir]);
 
   const content = (
     <div className="space-y-4" onKeyDown={handleKeyDown}>
@@ -248,9 +243,9 @@ export default function DocumentListBlock({
         </div>
         <div className="text-xs text-slate-400">
           {expiryFilter === "expired"
-            ? t("Faqat eskirgan hujjatlar")
+            ? t("Holat: faqat eskirgan")
             : expiryFilter === "active"
-              ? t("Faqat amaldagi hujjatlar")
+              ? t("Holat: faqat yaroqli")
               : sortKey
                 ? t("Ustun bo'yicha saralangan")
                 : t("Sana bo'yicha saralangan (Yangi birinchi)")}
@@ -271,12 +266,14 @@ export default function DocumentListBlock({
           <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
           <span className="block text-xs text-neutral-500">{t("Ma'lumotlar yuklanmoqda...")}</span>
         </div>
-      ) : !error && documents.length === 0 ? (
+      ) : !error && sortedDocuments.length === 0 ? (
         <div className="space-y-2 rounded-xl border border-primary-100 bg-slate-50/50 p-12 text-center">
           <X className="mx-auto h-8 w-8 text-neutral-400" />
           <h3 className="text-sm font-semibold text-primary-900">{t("HECH NARSA TOPILMADI")}</h3>
           <p className="mx-auto max-w-sm text-xs text-neutral-500">
-            {t("Kiritilgan filtrlar bo'yicha arxivdan mos yozuvlar topilmadi. Qidiruv kalit so'zlari yoki filtrlarni o'zgartirib ko'ring.")}
+            {documents.length > 0 && expiryFilter !== "all"
+              ? t("Bu holat filtri bo'yicha yozuv topilmadi")
+              : t("Kiritilgan filtrlar bo'yicha arxivdan mos yozuvlar topilmadi. Qidiruv kalit so'zlari yoki filtrlarni o'zgartirib ko'ring.")}
           </p>
         </div>
       ) : (
@@ -328,6 +325,7 @@ export default function DocumentListBlock({
                   className="px-3 py-2.5"
                   label={t("Holat")}
                   filter={expiryFilter}
+                  sublabel={expiryFilterSublabel(expiryFilter, t)}
                   onCycle={handleExpiryFilterCycle}
                 />
                 <th className="px-3 py-2.5 text-right">{t("Amallar")}</th>
@@ -371,11 +369,9 @@ export default function DocumentListBlock({
                     </td>
                     <td>
                       <div className="table-cell-inner">
-                        {expired ? (
-                          <span className={getExpiryBadgeClass(true)}>{t("Eskirgan")}</span>
-                        ) : (
-                          <span className="text-xs text-slate-400">—</span>
-                        )}
+                        <span className={getExpiryBadgeClass(expired)}>
+                          {expired ? t("Eskirgan") : t("Yaroqli")}
+                        </span>
                       </div>
                     </td>
                     <td onClick={(e) => e.stopPropagation()}>

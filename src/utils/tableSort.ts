@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getDocumentPersonLabel } from "./format.ts";
+import { getDocumentPersonLabel, isDocumentExpired } from "./format.ts";
 
 export type SortDir = "asc" | "desc";
 
@@ -38,10 +38,23 @@ export function cycleExpiryFilter(current: ExpiryFilter): ExpiryFilter {
   return "all";
 }
 
-export function expiryFilterToQuery(filter: ExpiryFilter): boolean | undefined {
-  if (filter === "expired") return true;
-  if (filter === "active") return false;
-  return undefined;
+export function filterDocumentsByExpiry(documents: any[], filter: ExpiryFilter): any[] {
+  if (filter === "expired") {
+    return documents.filter((doc) => isDocumentExpired(doc.expiryYear));
+  }
+  if (filter === "active") {
+    return documents.filter((doc) => !isDocumentExpired(doc.expiryYear));
+  }
+  return documents;
+}
+
+export function expiryFilterSublabel(
+  filter: ExpiryFilter,
+  t: (key: string) => string
+): string {
+  if (filter === "expired") return t("Eskirgan");
+  if (filter === "active") return t("Yaroqli");
+  return t("Barchasi");
 }
 
 export function sortDocuments(

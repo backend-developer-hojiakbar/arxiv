@@ -62,7 +62,7 @@ export function getDocumentRowClass(expired: boolean, base = "group cursor-point
 }
 
 export function getExpiryBadgeClass(expired: boolean): string {
-  return expired ? "status-badge status-eskirgan" : "status-badge status-neutral";
+  return expired ? "status-badge status-eskirgan" : "status-badge status-yaroqli";
 }
 
 export function getStatusStyle(status: string): string {

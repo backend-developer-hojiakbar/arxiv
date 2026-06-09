@@ -236,43 +236,32 @@ input:focus, select:focus, textarea:focus {
   color: var(--color-primary-700);
 }
 
-.data-table thead .expiry-filter-indicator {
-  position: relative;
+.data-table thead .expiry-filter-pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 9999px;
   flex-shrink: 0;
 }
 
-.data-table thead .expiry-filter-icon {
-  width: 1rem;
-  height: 1rem;
+.data-table thead .expiry-filter-pill--all {
+  background: #e2e8f0;
   color: #334155;
 }
 
-.data-table thead .sortable-th-btn:hover .expiry-filter-icon {
-  color: var(--color-primary-600);
+.data-table thead .expiry-filter-pill--expired {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
-.data-table thead .sortable-th-btn--active .expiry-filter-icon {
-  color: var(--color-primary-700);
-}
-
-.data-table thead .expiry-filter-dot {
-  position: absolute;
-  top: 0.2rem;
-  right: 0.2rem;
-  width: 0.4rem;
-  height: 0.4rem;
-  border-radius: 9999px;
-}
-
-.data-table thead .expiry-filter-dot--expired {
-  background: #dc2626;
-}
-
-.data-table thead .expiry-filter-dot--active {
-  background: #16a34a;
+.data-table thead .expiry-filter-pill--active {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
 }
 
 .data-table .col-index {
@@ -376,6 +365,12 @@ input:focus, select:focus, textarea:focus {
   background: #fef2f2;
   color: #dc2626;
   border: 1px solid #fca5a5;
+}
+
+.status-yaroqli {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
 }
 
 .status-neutral {

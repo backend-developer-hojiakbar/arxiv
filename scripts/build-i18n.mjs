@@ -104,6 +104,10 @@ const EXTRA_ENTRIES = {
   "Ustun bo'yicha saralangan": "Устун бўйича сараланган",
   "Faqat eskirgan hujjatlar": "Фақат эскирган ҳужжатлар",
   "Faqat amaldagi hujjatlar": "Фақат амалдаги ҳужжатлар",
+  "Yaroqli": "Яроқли",
+  "Holat: faqat eskirgan": "Ҳолат: фақат эскирган",
+  "Holat: faqat yaroqli": "Ҳолат: фақат яроқли",
+  "Bu holat filtri bo'yicha yozuv topilmadi": "Бу ҳолат фильтри бўйича ёзув топилмади",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 

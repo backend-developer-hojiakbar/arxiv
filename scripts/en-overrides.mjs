@@ -131,6 +131,10 @@ export const EN_OVERRIDES = {
   "Ustun bo'yicha saralangan": "Sorted by column",
   "Faqat eskirgan hujjatlar": "Expired documents only",
   "Faqat amaldagi hujjatlar": "Active documents only",
+  "Yaroqli": "Valid",
+  "Holat: faqat eskirgan": "Status: expired only",
+  "Holat: faqat yaroqli": "Status: valid only",
+  "Bu holat filtri bo'yicha yozuv topilmadi": "No records match this status filter",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -260,4 +264,8 @@ export const RU_FROM_EN_OVERRIDES = {
   "Ustun bo'yicha saralangan": "Сортировка по столбцу",
   "Faqat eskirgan hujjatlar": "Только просроченные документы",
   "Faqat amaldagi hujjatlar": "Только действующие документы",
+  "Yaroqli": "Действителен",
+  "Holat: faqat eskirgan": "Статус: только просроченные",
+  "Holat: faqat yaroqli": "Статус: только действующие",
+  "Bu holat filtri bo'yicha yozuv topilmadi": "Нет записей по этому фильтру статуса",
 };

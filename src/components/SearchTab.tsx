@@ -28,7 +28,8 @@ import {
   type ExpiryFilter,
   type SortDir,
   cycleExpiryFilter,
-  expiryFilterToQuery,
+  expiryFilterSublabel,
+  filterDocumentsByExpiry,
   sortDocuments,
   toggleSortKey,
 } from "../utils/tableSort.ts";
@@ -123,7 +124,6 @@ export default function SearchTab({
       cabinetId?: string;
       docDate?: string;
       page?: number;
-      expiryFilter?: ExpiryFilter;
     },
     background = false
   ) => {
@@ -131,13 +131,11 @@ export default function SearchTab({
     setError(null);
     const nextPage = overrideParams?.page ?? page;
     try {
-      const activeExpiryFilter = overrideParams?.expiryFilter ?? expiryFilter;
       const filters = {
         q,
         categoryId: overrideParams?.categoryId !== undefined ? overrideParams.categoryId : categoryId,
         cabinetId: overrideParams?.cabinetId !== undefined ? overrideParams.cabinetId : cabinetId,
         docDate: overrideParams?.docDate !== undefined ? overrideParams.docDate : filterDate,
-        expired: expiryFilterToQuery(activeExpiryFilter),
         page: nextPage,
         limit: PAGE_SIZE,
       };
@@ -167,15 +165,12 @@ export default function SearchTab({
     setExpiryFilter("all");
     setPage(1);
     setTimeout(() => {
-      searchDocuments({ categoryId: "", cabinetId: "", docDate: "", page: 1, expiryFilter: "all" });
+      searchDocuments({ categoryId: "", cabinetId: "", docDate: "", page: 1 });
     }, 50);
   };
 
   const handleExpiryFilterCycle = () => {
-    const next = cycleExpiryFilter(expiryFilter);
-    setExpiryFilter(next);
-    setPage(1);
-    searchDocuments({ page: 1, expiryFilter: next });
+    setExpiryFilter((current) => cycleExpiryFilter(current));
   };
 
   const goToPage = (nextPage: number) => {
@@ -225,10 +220,10 @@ export default function SearchTab({
     setSortDir(next.dir);
   };
 
-  const sortedDocuments = useMemo(
-    () => sortDocuments(documents, sortKey, sortDir),
-    [documents, sortKey, sortDir]
-  );
+  const sortedDocuments = useMemo(() => {
+    const filtered = filterDocumentsByExpiry(documents, expiryFilter);
+    return sortDocuments(filtered, sortKey, sortDir);
+  }, [documents, expiryFilter, sortKey, sortDir]);
 
   return (
     <div className="space-y-6 selection:bg-primary-600 selection:text-white" onKeyDown={handleKeyDown}>
@@ -270,9 +265,9 @@ export default function SearchTab({
         </div>
         <div className="text-xs text-slate-400">
           {expiryFilter === "expired"
-            ? t("Faqat eskirgan hujjatlar")
+            ? t("Holat: faqat eskirgan")
             : expiryFilter === "active"
-              ? t("Faqat amaldagi hujjatlar")
+              ? t("Holat: faqat yaroqli")
               : sortKey
                 ? t("Ustun bo'yicha saralangan")
                 : t("Sana bo'yicha saralangan (Yangi birinchi)")}
@@ -290,12 +285,14 @@ export default function SearchTab({
           <span className="font-mono text-xs uppercase bg-red-600 text-white px-2 py-1 rounded">{t("Xato yuklanish")}</span>
           <p className="mt-2 text-neutral-600 text-sm text-plain">{error}</p>
         </div>
-      ) : documents.length === 0 ? (
+      ) : sortedDocuments.length === 0 ? (
         <div className="border border-primary-100 rounded-xl p-12 text-center space-y-2 bg-slate-50/50">
           <X className="w-8 h-8 text-neutral-400 mx-auto" />
           <h3 className="font-sans font-bold text-primary-900 uppercase tracking-wider text-sm">{t("HECH NARSA TOPILMADI")}</h3>
           <p className="text-xs text-neutral-500 max-w-sm mx-auto">
-            {t("Kiritilgan filtrlar bo'yicha arxivdan mos yozuvlar topilmadi. Qidiruv kalit so'zlari yoki filtrlarni o'zgartirib ko'ring.")}
+            {documents.length > 0 && expiryFilter !== "all"
+              ? t("Bu holat filtri bo'yicha yozuv topilmadi")
+              : t("Kiritilgan filtrlar bo'yicha arxivdan mos yozuvlar topilmadi. Qidiruv kalit so'zlari yoki filtrlarni o'zgartirib ko'ring.")}
           </p>
         </div>
       ) : (
@@ -336,6 +333,7 @@ export default function SearchTab({
                   className="px-3 py-2.5"
                   label={t("Holat")}
                   filter={expiryFilter}
+                  sublabel={expiryFilterSublabel(expiryFilter, t)}
                   onCycle={handleExpiryFilterCycle}
                 />
                 <th className="px-3 py-2.5 text-right">{t("Amallar")}</th>
@@ -377,11 +375,9 @@ export default function SearchTab({
                   </td>
                   <td>
                     <div className="table-cell-inner">
-                      {expired ? (
-                        <span className={getExpiryBadgeClass(true)}>{t("Eskirgan")}</span>
-                      ) : (
-                        <span className="text-xs text-slate-400">—</span>
-                      )}
+                      <span className={getExpiryBadgeClass(expired)}>
+                        {expired ? t("Eskirgan") : t("Yaroqli")}
+                      </span>
                     </div>
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>

@@ -4,12 +4,12 @@
  */
 
 import React from "react";
-import { ListFilter } from "lucide-react";
 import type { ExpiryFilter } from "../utils/tableSort.ts";
 
 interface ExpiryFilterHeaderProps {
   label: string;
   filter: ExpiryFilter;
+  sublabel: string;
   onCycle: () => void;
   className?: string;
 }
@@ -17,31 +17,21 @@ interface ExpiryFilterHeaderProps {
 export default function ExpiryFilterHeader({
   label,
   filter,
+  sublabel,
   onCycle,
   className = "",
 }: ExpiryFilterHeaderProps) {
-  const active = filter !== "all";
-
   return (
     <th className={className}>
       <button
         type="button"
         onClick={onCycle}
-        className={`sortable-th-btn ${active ? "sortable-th-btn--active" : ""}`}
-        title={
-          filter === "all"
-            ? label
-            : filter === "expired"
-              ? `${label} — Eskirgan`
-              : `${label} — Amalda`
-        }
+        className={`sortable-th-btn expiry-filter-btn ${
+          filter !== "all" ? "sortable-th-btn--active" : ""
+        }`}
       >
         <span className="sortable-th-label">{label}</span>
-        <span className="expiry-filter-indicator" aria-hidden>
-          <ListFilter className="expiry-filter-icon" strokeWidth={2.5} />
-          {filter === "expired" && <span className="expiry-filter-dot expiry-filter-dot--expired" />}
-          {filter === "active" && <span className="expiry-filter-dot expiry-filter-dot--active" />}
-        </span>
+        <span className={`expiry-filter-pill expiry-filter-pill--${filter}`}>{sublabel}</span>
       </button>
     </th>
   );
