@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { api } from "../api.js";
 import { UserRole } from "../types.js";
 import { X } from "lucide-react";
@@ -22,6 +22,13 @@ import DocumentPagination from "./DocumentPagination.tsx";
 import DocumentTableActions from "./DocumentTableActions.tsx";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog.tsx";
 import DocumentDetailDrawer from "./DocumentDetailDrawer.tsx";
+import SortableTableHeader from "./SortableTableHeader.tsx";
+import {
+  type DocumentSortKey,
+  type SortDir,
+  sortDocuments,
+  toggleSortKey,
+} from "../utils/tableSort.ts";
 
 const PAGE_SIZE = 10;
 
@@ -67,6 +74,8 @@ export default function DocumentListBlock({
   const [editDoc, setEditDoc] = useState<any>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [printSlipDoc, setPrintSlipDoc] = useState<any>(null);
+  const [sortKey, setSortKey] = useState<DocumentSortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const canEdit = currentUser?.role !== UserRole.VIEWER;
   const canDelete = currentUser?.role === UserRole.ADMIN;
@@ -180,6 +189,17 @@ export default function DocumentListBlock({
     setTimeout(() => window.print(), 300);
   };
 
+  const handleSort = (key: DocumentSortKey) => {
+    const next = toggleSortKey(sortKey, sortDir, key);
+    setSortKey(next.key);
+    setSortDir(next.dir);
+  };
+
+  const sortedDocuments = useMemo(
+    () => sortDocuments(documents, sortKey, sortDir),
+    [documents, sortKey, sortDir]
+  );
+
   const content = (
     <div className="space-y-4" onKeyDown={handleKeyDown}>
       <DocumentFilters
@@ -196,16 +216,19 @@ export default function DocumentListBlock({
         loading={loading}
         onSearch={handleSearch}
         onReset={handleReset}
+        embedded={variant === "embedded"}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-primary-100 pb-2 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-sm">
         <div>
           {t("Topildi:")} <strong className="font-semibold text-primary-900">{total} {t("ta yozuv")}</strong>
           {totalPages > 1 && (
             <span className="ml-2 text-slate-500">· {t("Sahifa")} {page}/{totalPages}</span>
           )}
         </div>
-        <div className="text-xs text-slate-400">{t("Sana bo'yicha saralangan (Yangi birinchi)")}</div>
+        <div className="text-xs text-slate-400">
+          {sortKey ? t("Ustun bo'yicha saralangan") : t("Sana bo'yicha saralangan (Yangi birinchi)")}
+        </div>
       </div>
 
       {error && (
@@ -240,24 +263,61 @@ export default function DocumentListBlock({
           <table className="data-table w-full border-collapse bg-white text-left text-sm">
             <thead>
               <tr>
-                <th className="px-3 py-2.5">{t("Shaxs / Hujjat")}</th>
-                <th className="px-3 py-2.5">{t("Kategoriya")}</th>
-                <th className="px-3 py-2.5">{t("Sana")}</th>
-                <th className="px-3 py-2.5">{t("Joylashuv")}</th>
-                <th className="px-3 py-2.5">{t("Holat")}</th>
+                <th className="w-12 px-3 py-2.5 text-center">{t("Tartib raqami")}</th>
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Shaxs / Hujjat")}
+                  active={sortKey === "person"}
+                  direction={sortDir}
+                  onSort={() => handleSort("person")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Kategoriya")}
+                  active={sortKey === "category"}
+                  direction={sortDir}
+                  onSort={() => handleSort("category")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Sana")}
+                  active={sortKey === "date"}
+                  direction={sortDir}
+                  onSort={() => handleSort("date")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Joylashuv")}
+                  active={sortKey === "location"}
+                  direction={sortDir}
+                  onSort={() => handleSort("location")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Holat")}
+                  active={sortKey === "status"}
+                  direction={sortDir}
+                  onSort={() => handleSort("status")}
+                />
                 <th className="px-3 py-2.5 text-right">{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {documents.map((doc) => {
+              {sortedDocuments.map((doc, index) => {
                 const person = getDocumentPersonLabel(doc);
                 const expired = isDocumentExpired(doc.expiryYear);
+                const rowNumber = (page - 1) * PAGE_SIZE + index + 1;
                 return (
                   <tr
                     key={doc.id}
                     className={getDocumentRowClass(expired)}
                     onClick={() => setInspectDoc(doc)}
                   >
+                    <td>
+                      <div className="table-cell-inner text-center font-mono text-xs text-slate-500">
+                        {rowNumber}
+                      </div>
+                    </td>
                     <td>
                       <div className="table-cell-inner table-cell-inner--stack">
                         <div className="font-medium text-slate-800 text-plain">{person.name}</div>
@@ -325,12 +385,14 @@ export default function DocumentListBlock({
       {variant === "embedded" ? (
         <div className="card space-y-4">
           {sectionTitle && (
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="card-section-title flex items-center gap-2">
-                {sectionIcon}
-                {sectionTitle}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <h3 className="card-section-title flex min-w-0 flex-1 items-center gap-2">
+                {sectionIcon && <span className="shrink-0">{sectionIcon}</span>}
+                <span className="leading-snug">{sectionTitle}</span>
               </h3>
-              {sectionBadge && <span className="text-xs text-slate-400">{sectionBadge}</span>}
+              {sectionBadge && (
+                <span className="shrink-0 text-xs font-medium text-slate-500">{sectionBadge}</span>
+              )}
             </div>
           )}
           {content}

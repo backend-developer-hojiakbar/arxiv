@@ -21,7 +21,10 @@ interface DocumentFiltersProps {
   loading: boolean;
   onSearch: () => void;
   onReset: () => void;
+  embedded?: boolean;
 }
+
+const inputClass = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800";
 
 export default function DocumentFilters({
   q,
@@ -37,18 +40,19 @@ export default function DocumentFilters({
   loading,
   onSearch,
   onReset,
+  embedded = false,
 }: DocumentFiltersProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="filter-panel space-y-4">
+    <div className={embedded ? "space-y-4" : "filter-panel space-y-4"}>
       <div className="flex items-center gap-2">
-        <SlidersHorizontal className="h-4 w-4 text-primary-600" />
+        <SlidersHorizontal className="h-4 w-4 shrink-0 text-primary-600" />
         <h3 className="text-sm font-semibold text-slate-800">{t("Qidiruv filtrlari")}</h3>
       </div>
 
-      <div className="filter-grid">
-        <div className="md:col-span-2 lg:col-span-3">
+      <div className="space-y-4">
+        <div>
           <label className="field-label">{t("Ism, ID yoki hujjat nomi")}</label>
           <div className="relative">
             <input
@@ -56,7 +60,7 @@ export default function DocumentFilters({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("Masalan: Abduvahobov yoki HEMIS102938")}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              className={inputClass}
             />
             {q && (
               <button
@@ -70,52 +74,54 @@ export default function DocumentFilters({
           </div>
         </div>
 
-        <div>
-          <label className="field-label">{t("Kategoriya")}</label>
-          <select
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
-          >
-            <option value="">{t("Barchasi")}</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12 lg:items-end">
+          <div className="sm:col-span-1 lg:col-span-3">
+            <label className="field-label">{t("Kategoriya")}</label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">{t("Barchasi")}</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="field-label">{t("Shkaf")}</label>
-          <select
-            value={cabinetId}
-            onChange={(e) => setCabinetId(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
-          >
-            <option value="">{t("Barchasi")}</option>
-            {cabinets.map((cab) => (
-              <option key={cab.id} value={cab.id}>{cab.name}</option>
-            ))}
-          </select>
-        </div>
+          <div className="sm:col-span-1 lg:col-span-3">
+            <label className="field-label">{t("Shkaf")}</label>
+            <select
+              value={cabinetId}
+              onChange={(e) => setCabinetId(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">{t("Barchasi")}</option>
+              {cabinets.map((cab) => (
+                <option key={cab.id} value={cab.id}>{cab.name}</option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="field-label">{t("Sana")}</label>
-          <input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
-        </div>
-      </div>
+          <div className="sm:col-span-1 lg:col-span-3">
+            <label className="field-label">{t("Sana")}</label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className={inputClass}
+            />
+          </div>
 
-      <div className="flex justify-end gap-2 border-t border-slate-100 pt-2">
-        <button type="button" onClick={onSearch} disabled={loading} className="btn-primary">
-          <Search className="h-4 w-4" /> {t("Qidirish")}
-        </button>
-        <button type="button" onClick={onReset} className="btn-secondary">
-          {t("Tozalash")}
-        </button>
+          <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3 lg:justify-end">
+            <button type="button" onClick={onSearch} disabled={loading} className="btn-primary min-w-[7.5rem]">
+              <Search className="h-4 w-4" /> {t("Qidirish")}
+            </button>
+            <button type="button" onClick={onReset} className="btn-secondary min-w-[7.5rem]">
+              {t("Tozalash")}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

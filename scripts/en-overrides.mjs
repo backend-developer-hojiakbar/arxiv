@@ -125,6 +125,8 @@ export const EN_OVERRIDES = {
   "Eskirgan": "Expired",
   "Eskirish yili haqida izoh": "Document is considered expired after this year",
   "Masalan: 2028": "e.g. 2028",
+  "Qo'llab-quvvatlovchi": "Supported by",
+  "Yaratuvchi": "Developed by",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -248,4 +250,6 @@ export const RU_FROM_EN_OVERRIDES = {
   "Eskirgan": "Просрочен",
   "Eskirish yili haqida izoh": "Документ считается просроченным после этого года",
   "Masalan: 2028": "Например: 2028",
+  "Qo'llab-quvvatlovchi": "При поддержке",
+  "Yaratuvchi": "Разработчик",
 };

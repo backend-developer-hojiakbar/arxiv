@@ -173,10 +173,10 @@ export default function App() {
   if (authState === "loading") {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-slate-100">
-        <div className="flex flex-col items-center gap-4">
-          <AppLogo size="lg" />
-          <div className="w-8 h-8 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-          <span className="text-sm text-slate-500">{t("Sessiya tekshirilmoqda...")}</span>
+        <div className="flex flex-col items-center gap-6 px-6 text-center">
+          <AppLogo size="2xl" className="shadow-md ring-4 ring-white" />
+          <div className="h-9 w-9 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+          <span className="text-sm font-medium text-slate-500">{t("Sessiya tekshirilmoqda...")}</span>
         </div>
       </div>
     );
@@ -278,8 +278,24 @@ export default function App() {
           </div>
         </main>
 
-        <footer className="h-9 border-t border-slate-200 bg-white flex items-center justify-end px-6 text-xs text-slate-400 shrink-0 no-print">
-          <span>{t("FJSTI Arxivi")} &copy; {new Date().getFullYear()}</span>
+        <footer className="shrink-0 border-t border-slate-200 bg-white px-4 py-2.5 sm:px-6 no-print">
+          <div className="flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-1">
+              <p>
+                <span className="font-medium text-slate-600">{t("Qo'llab-quvvatlovchi")}:</span>{" "}
+                <span className="uppercase tracking-wide text-slate-700">
+                  {t("Farg'ona Jamoat Salomatligi Tibbiyot Instituti")}
+                </span>
+              </p>
+              <p>
+                <span className="font-medium text-slate-600">{t("Yaratuvchi")}:</span>{" "}
+                <span className="text-slate-700">{t("Inkubatsiya va Akseleratsiya markazi")}</span>
+              </p>
+            </div>
+            <span className="shrink-0 text-slate-400">
+              {t("FJSTI Arxivi")} &copy; {new Date().getFullYear()}
+            </span>
+          </div>
         </footer>
       </div>
     </div>

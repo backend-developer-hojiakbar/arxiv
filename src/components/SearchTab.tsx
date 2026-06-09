@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { api } from "../api.js";
 import { X } from "lucide-react";
 import { AnimatePresence } from "motion/react";
@@ -219,7 +219,7 @@ export default function SearchTab({
       />
 
       {/* Results Title Area */}
-      <div className="flex flex-wrap justify-between items-center gap-2 text-sm pb-2 border-b border-primary-100">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <div>
           {t("Topildi:")} <strong className="text-primary-900 font-semibold">{total} {t("ta yozuv")}</strong>
           {totalPages > 1 && (
