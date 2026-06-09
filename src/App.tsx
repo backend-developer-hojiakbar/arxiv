@@ -279,18 +279,21 @@ export default function App() {
         </main>
 
         <footer className="shrink-0 border-t border-slate-200 bg-white px-4 py-2.5 sm:px-6 no-print">
-          <div className="flex flex-col items-end gap-1 text-right text-xs text-slate-500">
-            <p>
+          <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-slate-500">
+            <span>
               <span className="font-medium text-slate-600">{t("Qo'llab-quvvatlovchi")}:</span>{" "}
               <span className="uppercase tracking-wide text-slate-700">
                 {t("Farg'ona Jamoat Salomatligi Tibbiyot Instituti")}
               </span>
-            </p>
-            <p>
+            </span>
+            <span className="hidden text-slate-300 sm:inline" aria-hidden>
+              ·
+            </span>
+            <span>
               <span className="font-medium text-slate-600">{t("Yaratuvchi")}:</span>{" "}
               <span className="text-slate-700">{t("Inkubatsiya va Akseleratsiya markazi")}</span>
-            </p>
-          </div>
+            </span>
+          </p>
         </footer>
       </div>
     </div>
