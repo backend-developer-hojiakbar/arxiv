@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import type { SortDir } from "../utils/tableSort.ts";
 
 interface SortableTableHeaderProps {
@@ -36,12 +36,12 @@ export default function SortableTableHeader({
       >
         <span className="sortable-th-label">{label}</span>
         <span className="sortable-th-indicator" aria-hidden>
-          <ChevronUp
+          <ArrowUp
             className={`sortable-th-chevron sortable-th-chevron--up ${
               active && direction === "asc" ? "sortable-th-chevron--on" : ""
             }`}
           />
-          <ChevronDown
+          <ArrowDown
             className={`sortable-th-chevron sortable-th-chevron--down ${
               active && direction === "desc" ? "sortable-th-chevron--on" : ""
             }`}

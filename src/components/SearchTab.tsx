@@ -313,7 +313,7 @@ export default function SearchTab({
                   direction={sortDir}
                   onSort={() => handleSort("status")}
                 />
-                <th className="px-3 py-2.5 text-right text-white">{t("Amallar")}</th>
+                <th className="px-3 py-2.5 text-right">{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
