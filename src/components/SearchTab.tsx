@@ -8,7 +8,13 @@ import { api } from "../api.js";
 import { X } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
-import { getDocumentPersonLabel, getStatusStyle } from "../utils/format.ts";
+import {
+  getDocumentPersonLabel,
+  getDocumentRowClass,
+  getExpiryBadgeClass,
+  getStatusStyle,
+  isDocumentExpired,
+} from "../utils/format.ts";
 import { UserRole } from "../types.ts";
 import DocumentEditModal from "./DocumentEditModal.tsx";
 import DocumentFilters from "./DocumentFilters.tsx";
@@ -262,10 +268,11 @@ export default function SearchTab({
             <tbody className="divide-y divide-slate-100">
               {documents.map((doc) => {
                 const person = getDocumentPersonLabel(doc);
+                const expired = isDocumentExpired(doc.expiryYear);
                 return (
                 <tr 
                   key={doc.id}
-                  className="hover:bg-slate-50 group cursor-pointer"
+                  className={getDocumentRowClass(expired)}
                   onClick={() => setSelectedDoc(doc)}
                 >
                   <td>
@@ -291,8 +298,11 @@ export default function SearchTab({
                     </div>
                   </td>
                   <td>
-                    <div className="table-cell-inner">
+                    <div className="table-cell-inner flex flex-wrap gap-1">
                       <span className={getStatusStyle(doc.status)}>{t(doc.status)}</span>
+                      {expired && (
+                        <span className={getExpiryBadgeClass(true)}>{t("Eskirgan")}</span>
+                      )}
                     </div>
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>

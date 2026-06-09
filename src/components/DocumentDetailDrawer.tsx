@@ -8,7 +8,7 @@ import { fetchDocumentPdf } from "../api.js";
 import { MapPin, Printer, X, FileDown } from "lucide-react";
 import { motion } from "motion/react";
 import { useTranslation } from "./LanguageContext.tsx";
-import { getDocumentPersonLabel } from "../utils/format.ts";
+import { getDocumentPersonLabel, getExpiryBadgeClass, isDocumentExpired } from "../utils/format.ts";
 
 interface DocumentDetailDrawerProps {
   doc: any;
@@ -95,6 +95,7 @@ export default function DocumentDetailDrawer({
   };
 
   const person = getDocumentPersonLabel(doc);
+  const expired = isDocumentExpired(doc.expiryYear);
 
   return (
     <>
@@ -212,6 +213,17 @@ export default function DocumentDetailDrawer({
                     {new Date(doc.receivedAt).toLocaleString("uz-UZ")}
                   </span>
                 </div>
+                {doc.expiryYear != null && (
+                  <div>
+                    <span className="field-label !mb-0">{t("Eskirish yili")}</span>
+                    <span className={`text-plain ${expired ? "font-semibold text-red-600" : "text-slate-700"}`}>
+                      {doc.expiryYear}
+                      {expired && (
+                        <span className={`ml-2 ${getExpiryBadgeClass(true)}`}>{t("Eskirgan")}</span>
+                      )}
+                    </span>
+                  </div>
+                )}
                 {doc.status === "Berilgan" && (
                   <>
                     <div>

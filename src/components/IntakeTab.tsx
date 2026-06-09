@@ -50,6 +50,7 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
   // Document Info
   const [docName, setDocName] = useState("");
   const [docDate, setDocDate] = useState("");
+  const [expiryYear, setExpiryYear] = useState<number | "">("");
 
   // STEP 2 Form State: Student (for cat-talaba)
   const [studentMode, setStudentMode] = useState<"existing" | "new">("existing");
@@ -209,6 +210,7 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
         categoryId,
         docName: docName.trim(),
         docDate,
+        expiryYear: expiryYear === "" ? undefined : Number(expiryYear),
         cabinetId,
         floor: Number(floor),
         personType,
@@ -236,6 +238,7 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
     setCategoryId("");
     setDocName("");
     setDocDate("");
+    setExpiryYear("");
 
     // Students Reset
     setSelectedStudentId("");
@@ -572,6 +575,20 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                             onChange={(e) => setDocDate(e.target.value)}
                             className={inputClass}
                           />
+                        </div>
+
+                        <div>
+                          <label className="field-label">{t("Eskirish yili")} ({t("Ixtiyoriy")})</label>
+                          <input
+                            type="number"
+                            min={1900}
+                            max={2100}
+                            value={expiryYear}
+                            onChange={(e) => setExpiryYear(e.target.value === "" ? "" : Number(e.target.value))}
+                            placeholder={t("Masalan: 2028")}
+                            className={inputClass}
+                          />
+                          <p className="mt-1 text-xs text-slate-500">{t("Eskirish yili haqida izoh")}</p>
                         </div>
                       </div>
 
@@ -925,6 +942,12 @@ export default function IntakeTab({ onNavigateToTab, onDataChange }: IntakeTabPr
                         <span className="field-label !mb-0">{t("PDF fayl")}</span>
                         <span className="text-plain text-slate-700 truncate block">{file?.name || "—"}</span>
                       </div>
+                      {expiryYear !== "" && (
+                        <div>
+                          <span className="field-label !mb-0">{t("Eskirish yili")}</span>
+                          <span className="text-plain font-medium text-red-600">{expiryYear}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-4 bg-primary-900 text-white rounded-b-xl">

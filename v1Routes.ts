@@ -109,6 +109,7 @@ function serializeDocument(doc: any, db: ReturnType<typeof readDB>) {
     floor: doc.floor,
     doc_name: doc.docName,
     doc_date: doc.docDate,
+    expiry_year: doc.expiryYear ?? null,
     person_type: doc.personType || "none",
     employee_id: doc.employeeId,
     student_id: doc.studentId,
@@ -423,6 +424,7 @@ export function createV1Router(): Router {
     const floor = body.floor;
     const docName = body.doc_name;
     const docDate = body.doc_date;
+    const expiryYearRaw = body.expiry_year;
     const personType = body.person_type;
     const employeeId = body.employee_id;
     const studentId = body.student_id;
@@ -526,6 +528,7 @@ export function createV1Router(): Router {
       categoryId,
       docName: docName || "",
       docDate: docDate || "",
+      expiryYear: expiryYearRaw != null && expiryYearRaw !== "" ? parseInt(String(expiryYearRaw), 10) : undefined,
       personType: personType || (categoryId === "cat-talaba" ? "student" : categoryId === "cat-xodim" ? "employee" : "none"),
       cabinetId,
       floor: floorNum,
@@ -585,6 +588,7 @@ export function createV1Router(): Router {
     const categoryId = body.category_id;
     const docName = body.doc_name;
     const docDate = body.doc_date;
+    const expiryYearRaw = body.expiry_year;
     const personType = body.person_type;
     const employeeId = body.employee_id;
     const studentId = body.student_id;
@@ -620,6 +624,13 @@ export function createV1Router(): Router {
     if (notes !== undefined) doc.notes = notes;
     if (docName !== undefined && String(docName).trim()) doc.docName = String(docName).trim();
     if (docDate !== undefined) doc.docDate = docDate;
+
+    if (expiryYearRaw !== undefined) {
+      doc.expiryYear =
+        expiryYearRaw === null || expiryYearRaw === ""
+          ? undefined
+          : parseInt(String(expiryYearRaw), 10) || undefined;
+    }
 
     if (personType !== undefined) doc.personType = personType;
 

@@ -395,6 +395,7 @@ export const api = {
     floor: number;
     docName: string;
     docDate?: string;
+    expiryYear?: number | null;
     personType?: string;
     employeeId?: string;
     studentId?: string;
@@ -413,6 +414,9 @@ export const api = {
     form.append("doc_name", data.docName);
 
     if (data.docDate) form.append("doc_date", data.docDate);
+    if (data.expiryYear != null && data.expiryYear !== undefined) {
+      form.append("expiry_year", String(data.expiryYear));
+    }
     if (data.personType) form.append("person_type", data.personType);
     if (data.employeeId) form.append("employee_id", data.employeeId);
     if (data.studentId) form.append("student_id", data.studentId);
@@ -443,6 +447,7 @@ export const api = {
       floor?: number;
       docName?: string;
       docDate?: string;
+      expiryYear?: number | null;
       personType?: string;
       employeeId?: string | null;
       studentId?: string | null;
@@ -460,6 +465,7 @@ export const api = {
     if (data.floor !== undefined) body.floor = data.floor;
     if (data.docName !== undefined) body.doc_name = data.docName;
     if (data.docDate !== undefined) body.doc_date = data.docDate;
+    if (data.expiryYear !== undefined) body.expiry_year = data.expiryYear;
     if (data.personType !== undefined) body.person_type = data.personType;
     if (data.employeeId !== undefined) body.employee_id = data.employeeId;
     if (data.studentId !== undefined) body.student_id = data.studentId;

@@ -121,6 +121,10 @@ export const EN_OVERRIDES = {
   "HEMIS ID": "HEMIS ID",
   "HEMIS ID (CODE):": "HEMIS ID (CODE):",
   hujjat: "doc.",
+  "Eskirish yili": "Expiry year",
+  "Eskirgan": "Expired",
+  "Eskirish yili haqida izoh": "Document is considered expired after this year",
+  "Masalan: 2028": "e.g. 2028",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -240,4 +244,8 @@ export const RU_FROM_EN_OVERRIDES = {
   "Yangi Mas'ul Xodim Qo'shish": "Добавить нового ответственного сотрудника",
   hujjat: "док.",
   "Tavsif kiritilmagan": "Описание не указано",
+  "Eskirish yili": "Год истечения",
+  "Eskirgan": "Просрочен",
+  "Eskirish yili haqida izoh": "Документ считается просроченным после этого года",
+  "Masalan: 2028": "Например: 2028",
 };

@@ -93,6 +93,7 @@ export function mapDocument(raw: Record<string, unknown>) {
     floor: raw.floor as number,
     docName: (raw.doc_name ?? raw.docName) as string | undefined,
     docDate: (raw.doc_date ?? raw.docDate) as string | undefined,
+    expiryYear: (raw.expiry_year ?? raw.expiryYear ?? null) as number | null | undefined,
     personType: (raw.person_type ?? raw.personType ?? "none") as string,
     employeeId: (raw.employee_id ?? raw.employeeId) as string | undefined,
     studentId: (raw.student_id ?? raw.studentId) as string | undefined,

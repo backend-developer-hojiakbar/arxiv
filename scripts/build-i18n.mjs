@@ -93,6 +93,10 @@ const EXTRA_ENTRIES = {
   "Qo'shish": "Қўшиш",
   "Yangi foydalanuvchi qo'shish": "Янги фойдаланувчи қўшиш",
   "Masalan: 1-qavat, o'ng burchak": "Масалан: 1-қават, ўнг бурчак",
+  "Eskirish yili": "Эскириш йили",
+  "Eskirgan": "Эскирган",
+  "Eskirish yili haqida izoh": "Ҳужжат бу йилдан кейин эскирган ҳисобланади",
+  "Masalan: 2028": "Масалан: 2028",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 

@@ -267,6 +267,12 @@ input:focus, select:focus, textarea:focus {
   border: 1px solid #fecaca;
 }
 
+.status-eskirgan {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
 .status-neutral {
   background: #f8fafc;
   color: #64748b;

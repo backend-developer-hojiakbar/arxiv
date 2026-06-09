@@ -49,6 +49,22 @@ export function getDocumentPersonLabel(doc: {
   };
 }
 
+export function isDocumentExpired(expiryYear?: number | null): boolean {
+  if (expiryYear == null || Number.isNaN(expiryYear)) return false;
+  return new Date().getFullYear() > expiryYear;
+}
+
+export function getDocumentRowClass(expired: boolean, base = "group cursor-pointer"): string {
+  if (expired) {
+    return `${base} bg-red-50 hover:bg-red-100 border-l-4 border-l-red-500`;
+  }
+  return `${base} hover:bg-slate-50`;
+}
+
+export function getExpiryBadgeClass(expired: boolean): string {
+  return expired ? "status-badge status-eskirgan" : "status-badge status-neutral";
+}
+
 export function getStatusStyle(status: string): string {
   switch (status) {
     case DocumentStatus.JOYIDA:

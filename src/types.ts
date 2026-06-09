@@ -76,6 +76,7 @@ export interface Document {
   categoryId: string;
   docName?: string;
   docDate?: string;
+  expiryYear?: number | null;
   personType?: "student" | "employee" | "none";
   cabinetId: string;
   floor: number;

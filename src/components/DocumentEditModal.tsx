@@ -10,7 +10,7 @@ import { api } from "../api.js";
 import { getCategoryFlowType } from "../apiMappers.ts";
 import { DocumentStatus } from "../types.js";
 import { useTranslation } from "./LanguageContext.tsx";
-import { getDocumentPersonLabel } from "../utils/format.ts";
+import { getDocumentPersonLabel, isDocumentExpired } from "../utils/format.ts";
 
 const editInputClass =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-primary-500";
@@ -35,6 +35,7 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
   const [editFloor, setEditFloor] = useState<number>(1);
   const [editDocName, setEditDocName] = useState("");
   const [editDocDate, setEditDocDate] = useState("");
+  const [editExpiryYear, setEditExpiryYear] = useState<number | "">("");
   const [editStudentId, setEditStudentId] = useState("");
   const [editEmployeeId, setEditEmployeeId] = useState("");
   const [editNotes, setEditNotes] = useState("");
@@ -51,6 +52,7 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
     setEditFloor(doc.floor);
     setEditDocName(doc.docName || (person.type === "institut" ? person.name : "") || "");
     setEditDocDate(doc.docDate || "");
+    setEditExpiryYear(doc.expiryYear ?? "");
     setEditStudentId(doc.studentId || doc.student?.id || "");
     setEditEmployeeId(doc.employeeId || doc.employee?.id || "");
     setEditNotes(doc.notes || "");
@@ -146,6 +148,7 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
         floor: Number(editFloor),
         docName: editDocName.trim(),
         docDate: editDocDate,
+        expiryYear: editExpiryYear === "" ? null : Number(editExpiryYear),
         personType,
         studentId,
         employeeId,
@@ -214,6 +217,21 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
                 onChange={(e) => setEditDocDate(e.target.value)}
                 className={editInputClass}
               />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="field-label">{t("Eskirish yili")} ({t("Ixtiyoriy")})</label>
+              <input
+                type="number"
+                min={1900}
+                max={2100}
+                value={editExpiryYear}
+                onChange={(e) => setEditExpiryYear(e.target.value === "" ? "" : Number(e.target.value))}
+                placeholder={t("Masalan: 2028")}
+                className={editInputClass}
+              />
+              {isDocumentExpired(editExpiryYear === "" ? null : Number(editExpiryYear)) && (
+                <p className="mt-1 text-xs font-medium text-red-600">{t("Eskirgan")}</p>
+              )}
             </div>
           </div>
 
