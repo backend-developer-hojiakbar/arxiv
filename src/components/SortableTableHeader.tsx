@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { SortDir } from "../utils/tableSort.ts";
 
 interface SortableTableHeaderProps {
@@ -26,17 +26,27 @@ export default function SortableTableHeader({
 }: SortableTableHeaderProps) {
   const alignClass =
     align === "right" ? "justify-end" : align === "center" ? "justify-center" : "justify-start";
-  const Icon = active ? (direction === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
 
   return (
     <th className={className}>
       <button
         type="button"
         onClick={onSort}
-        className={`flex w-full items-center gap-1 ${alignClass} text-left font-semibold text-slate-600 transition-colors hover:text-primary-700`}
+        className={`sortable-th-btn ${active ? "sortable-th-btn--active" : ""} ${alignClass}`}
       >
-        <span>{label}</span>
-        <Icon className={`h-3.5 w-3.5 shrink-0 ${active ? "text-primary-600" : "text-slate-400"}`} />
+        <span className="sortable-th-label">{label}</span>
+        <span className="sortable-th-indicator" aria-hidden>
+          <ChevronUp
+            className={`sortable-th-chevron sortable-th-chevron--up ${
+              active && direction === "asc" ? "sortable-th-chevron--on" : ""
+            }`}
+          />
+          <ChevronDown
+            className={`sortable-th-chevron sortable-th-chevron--down ${
+              active && direction === "desc" ? "sortable-th-chevron--on" : ""
+            }`}
+          />
+        </span>
       </button>
     </th>
   );

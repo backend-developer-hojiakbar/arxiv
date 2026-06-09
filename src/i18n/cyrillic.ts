@@ -540,6 +540,7 @@ export const cyrillicTranslations: Record<string, string> = {
   "Tanlangan": "Танланган",
   "Tanlangan fayl": "Танланган файл",
   "Tanlash": "Танлаш",
+  "Tartib raqami": "№",
   "Tasdiqlayman, Joyida": "Тасдиқлайман, Жойида",
   "Tavsif": "Тавсиф",
   "Tavsif kiritilmagan": "Тавсиф киритилмаган",
@@ -580,6 +581,7 @@ export const cyrillicTranslations: Record<string, string> = {
   "Ushbu HEMIS kodli talaba bazada topildi! Ma'lumotlar yuklandi.": "Ушбу HEMIS кодли талаба базада топилди! Маълумотлар юкланди.",
   "Ushbu kunda topshirilgan yangi arxiv hujjatlari soni": "Ушбу кунда топширилган янги архив ҳужжатлари сони",
   "Ushbu talabaning raqamli hujjati muvaffaqiyatli arxivlandi va tizimda saqlandi.": "Ушбу талабанинг рақамли ҳужжати муваффақиятли архивланди ва тизимда сақланди.",
+  "Ustun bo'yicha saralangan": "Устун бўйича сараланган",
   "Vaqt": "Вақт",
   "Vaqtincha olib ketdi (Mas'ul shaxs)": "Вақтинча олиб кетди (Масъул шахс)",
   "Vaqtinchalik berish (Rent file)": "Вақтинчалик бериш (Ижара)",
@@ -655,4 +657,5 @@ export const cyrillicTranslations: Record<string, string> = {
   "ta yozuv": "та ёзув",
   "tasdiqlash zaxirasi": "тасдиқлаш захираси",
   "yuklash": "юклаш",
+  "№": "№",
 };

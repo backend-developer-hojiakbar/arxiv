@@ -22,6 +22,13 @@ import DocumentPagination from "./DocumentPagination.tsx";
 import DocumentTableActions from "./DocumentTableActions.tsx";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog.tsx";
 import DocumentDetailDrawer from "./DocumentDetailDrawer.tsx";
+import SortableTableHeader from "./SortableTableHeader.tsx";
+import {
+  type DocumentSortKey,
+  type SortDir,
+  sortDocuments,
+  toggleSortKey,
+} from "../utils/tableSort.ts";
 
 const PAGE_SIZE = 10;
 
@@ -62,6 +69,8 @@ export default function SearchTab({
   const [editDoc, setEditDoc] = useState<any>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [printSlipDoc, setPrintSlipDoc] = useState<any>(null);
+  const [sortKey, setSortKey] = useState<DocumentSortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   // Load categories & cabinets for filters
   useEffect(() => {
@@ -190,6 +199,17 @@ export default function SearchTab({
     }, 300);
   };
 
+  const handleSort = (key: DocumentSortKey) => {
+    const next = toggleSortKey(sortKey, sortDir, key);
+    setSortKey(next.key);
+    setSortDir(next.dir);
+  };
+
+  const sortedDocuments = useMemo(
+    () => sortDocuments(documents, sortKey, sortDir),
+    [documents, sortKey, sortDir]
+  );
+
   return (
     <div className="space-y-6 selection:bg-primary-600 selection:text-white" onKeyDown={handleKeyDown}>
       {/* Search Header */}
@@ -228,8 +248,8 @@ export default function SearchTab({
             </span>
           )}
         </div>
-        <div className="text-slate-400 text-xs">
-          {t("Sana bo'yicha saralangan (Yangi birinchi)")}
+        <div className="text-xs text-slate-400">
+          {sortKey ? t("Ustun bo'yicha saralangan") : t("Sana bo'yicha saralangan (Yangi birinchi)")}
         </div>
       </div>
 
@@ -257,24 +277,57 @@ export default function SearchTab({
           <table className="data-table w-full text-left border-collapse bg-white text-sm">
             <thead>
               <tr>
-                <th className="py-2.5 px-3">{t("Shaxs / Hujjat")}</th>
-                <th className="py-2.5 px-3">{t("Kategoriya")}</th>
-                <th className="py-2.5 px-3">{t("Sana")}</th>
-                <th className="py-2.5 px-3">{t("Joylashuv")}</th>
-                <th className="py-2.5 px-3">{t("Holat")}</th>
-                <th className="py-2.5 px-3 text-right">{t("Amallar")}</th>
+                <th className="col-index">{t("№")}</th>
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Shaxs / Hujjat")}
+                  active={sortKey === "person"}
+                  direction={sortDir}
+                  onSort={() => handleSort("person")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Kategoriya")}
+                  active={sortKey === "category"}
+                  direction={sortDir}
+                  onSort={() => handleSort("category")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Sana")}
+                  active={sortKey === "date"}
+                  direction={sortDir}
+                  onSort={() => handleSort("date")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Joylashuv")}
+                  active={sortKey === "location"}
+                  direction={sortDir}
+                  onSort={() => handleSort("location")}
+                />
+                <SortableTableHeader
+                  className="px-3 py-2.5"
+                  label={t("Holat")}
+                  active={sortKey === "status"}
+                  direction={sortDir}
+                  onSort={() => handleSort("status")}
+                />
+                <th className="px-3 py-2.5 text-right text-white">{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {documents.map((doc) => {
+              {sortedDocuments.map((doc, index) => {
                 const person = getDocumentPersonLabel(doc);
                 const expired = isDocumentExpired(doc.expiryYear);
+                const rowNumber = (page - 1) * PAGE_SIZE + index + 1;
                 return (
                 <tr 
                   key={doc.id}
                   className={getDocumentRowClass(expired)}
                   onClick={() => setSelectedDoc(doc)}
                 >
+                  <td className="col-index font-mono text-xs text-slate-500">{rowNumber}</td>
                   <td>
                     <div className="table-cell-inner table-cell-inner--stack">
                       <div className="font-medium text-slate-800 text-plain">{person.name}</div>

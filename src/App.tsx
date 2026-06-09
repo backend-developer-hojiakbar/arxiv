@@ -279,22 +279,17 @@ export default function App() {
         </main>
 
         <footer className="shrink-0 border-t border-slate-200 bg-white px-4 py-2.5 sm:px-6 no-print">
-          <div className="flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-1">
-              <p>
-                <span className="font-medium text-slate-600">{t("Qo'llab-quvvatlovchi")}:</span>{" "}
-                <span className="uppercase tracking-wide text-slate-700">
-                  {t("Farg'ona Jamoat Salomatligi Tibbiyot Instituti")}
-                </span>
-              </p>
-              <p>
-                <span className="font-medium text-slate-600">{t("Yaratuvchi")}:</span>{" "}
-                <span className="text-slate-700">{t("Inkubatsiya va Akseleratsiya markazi")}</span>
-              </p>
-            </div>
-            <span className="shrink-0 text-slate-400">
-              {t("FJSTI Arxivi")} &copy; {new Date().getFullYear()}
-            </span>
+          <div className="flex flex-col items-end gap-1 text-right text-xs text-slate-500">
+            <p>
+              <span className="font-medium text-slate-600">{t("Qo'llab-quvvatlovchi")}:</span>{" "}
+              <span className="uppercase tracking-wide text-slate-700">
+                {t("Farg'ona Jamoat Salomatligi Tibbiyot Instituti")}
+              </span>
+            </p>
+            <p>
+              <span className="font-medium text-slate-600">{t("Yaratuvchi")}:</span>{" "}
+              <span className="text-slate-700">{t("Inkubatsiya va Akseleratsiya markazi")}</span>
+            </p>
           </div>
         </footer>
       </div>

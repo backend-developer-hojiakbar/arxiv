@@ -127,6 +127,8 @@ export const EN_OVERRIDES = {
   "Masalan: 2028": "e.g. 2028",
   "Qo'llab-quvvatlovchi": "Supported by",
   "Yaratuvchi": "Developed by",
+  "Tartib raqami": "No.",
+  "Ustun bo'yicha saralangan": "Sorted by column",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -252,4 +254,6 @@ export const RU_FROM_EN_OVERRIDES = {
   "Masalan: 2028": "Например: 2028",
   "Qo'llab-quvvatlovchi": "При поддержке",
   "Yaratuvchi": "Разработчик",
+  "Tartib raqami": "№",
+  "Ustun bo'yicha saralangan": "Сортировка по столбцу",
 };

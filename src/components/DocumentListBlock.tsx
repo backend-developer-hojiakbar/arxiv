@@ -254,7 +254,13 @@ export default function DocumentListBlock({
           </p>
         </div>
       ) : (
-        <div className="relative overflow-x-auto card !p-0">
+        <div
+          className={
+            variant === "embedded"
+              ? "relative overflow-x-auto rounded-lg border border-slate-200"
+              : "relative overflow-x-auto card !p-0"
+          }
+        >
           {loading && documents.length > 0 && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
@@ -263,7 +269,7 @@ export default function DocumentListBlock({
           <table className="data-table w-full border-collapse bg-white text-left text-sm">
             <thead>
               <tr>
-                <th className="w-12 px-3 py-2.5 text-center">{t("Tartib raqami")}</th>
+                <th className="col-index">{t("№")}</th>
                 <SortableTableHeader
                   className="px-3 py-2.5"
                   label={t("Shaxs / Hujjat")}
@@ -299,7 +305,7 @@ export default function DocumentListBlock({
                   direction={sortDir}
                   onSort={() => handleSort("status")}
                 />
-                <th className="px-3 py-2.5 text-right">{t("Amallar")}</th>
+                <th className="px-3 py-2.5 text-right text-white">{t("Amallar")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -313,11 +319,7 @@ export default function DocumentListBlock({
                     className={getDocumentRowClass(expired)}
                     onClick={() => setInspectDoc(doc)}
                   >
-                    <td>
-                      <div className="table-cell-inner text-center font-mono text-xs text-slate-500">
-                        {rowNumber}
-                      </div>
-                    </td>
+                    <td className="col-index font-mono text-xs text-slate-500">{rowNumber}</td>
                     <td>
                       <div className="table-cell-inner table-cell-inner--stack">
                         <div className="font-medium text-slate-800 text-plain">{person.name}</div>
@@ -383,9 +385,9 @@ export default function DocumentListBlock({
   return (
     <>
       {variant === "embedded" ? (
-        <div className="card space-y-4">
+        <div className="card overflow-hidden !p-0">
           {sectionTitle && (
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
               <h3 className="card-section-title flex min-w-0 flex-1 items-center gap-2">
                 {sectionIcon && <span className="shrink-0">{sectionIcon}</span>}
                 <span className="leading-snug">{sectionTitle}</span>
@@ -395,7 +397,7 @@ export default function DocumentListBlock({
               )}
             </div>
           )}
-          {content}
+          <div className="space-y-4 px-5 pb-5 pt-4">{content}</div>
         </div>
       ) : (
         content

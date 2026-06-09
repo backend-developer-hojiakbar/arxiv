@@ -99,6 +99,9 @@ const EXTRA_ENTRIES = {
   "Masalan: 2028": "Масалан: 2028",
   "Qo'llab-quvvatlovchi": "Қўллаб-қувватловчи",
   "Yaratuvchi": "Яратувчи",
+  "Tartib raqami": "№",
+  "№": "№",
+  "Ustun bo'yicha saralangan": "Устун бўйича сараланган",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 

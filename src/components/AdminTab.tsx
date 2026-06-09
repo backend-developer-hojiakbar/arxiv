@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { api } from "../api.js";
 import { UserRole } from "../types.js";
 import {
@@ -19,6 +19,13 @@ import {
 } from "lucide-react";
 import { useTranslation } from "./LanguageContext.tsx";
 import { downloadAuditExcel } from "../utils/exportAudit.ts";
+import SortableTableHeader from "./SortableTableHeader.tsx";
+import {
+  type AuditSortKey,
+  type SortDir,
+  sortAuditLogs,
+  toggleSortKey,
+} from "../utils/tableSort.ts";
 
 const AUDIT_UI_LIMIT = 10;
 const inputClass =
@@ -43,6 +50,8 @@ export default function AdminTab() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [auditSortKey, setAuditSortKey] = useState<AuditSortKey | null>(null);
+  const [auditSortDir, setAuditSortDir] = useState<SortDir>("asc");
 
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
@@ -96,6 +105,17 @@ export default function AdminTab() {
       setExporting(false);
     }
   };
+
+  const handleAuditSort = (key: AuditSortKey) => {
+    const next = toggleSortKey(auditSortKey, auditSortDir, key);
+    setAuditSortKey(next.key);
+    setAuditSortDir(next.dir);
+  };
+
+  const sortedAuditLogs = useMemo(
+    () => sortAuditLogs(auditLogs, auditSortKey, auditSortDir),
+    [auditLogs, auditSortKey, auditSortDir]
+  );
 
   useEffect(() => {
     bootstrapAdminData();
@@ -434,15 +454,37 @@ export default function AdminTab() {
             <table className="data-table w-full text-left">
               <thead>
                 <tr>
-                  <th>{t("Vaqt")}</th>
-                  <th>{t("Foydalanuvchi")}</th>
-                  <th>{t("Amal")}</th>
-                  <th>{t("Ob'ekt")}</th>
+                  <th className="col-index">{t("№")}</th>
+                  <SortableTableHeader
+                    label={t("Vaqt")}
+                    active={auditSortKey === "time"}
+                    direction={auditSortDir}
+                    onSort={() => handleAuditSort("time")}
+                  />
+                  <SortableTableHeader
+                    label={t("Foydalanuvchi")}
+                    active={auditSortKey === "user"}
+                    direction={auditSortDir}
+                    onSort={() => handleAuditSort("user")}
+                  />
+                  <SortableTableHeader
+                    label={t("Amal")}
+                    active={auditSortKey === "action"}
+                    direction={auditSortDir}
+                    onSort={() => handleAuditSort("action")}
+                  />
+                  <SortableTableHeader
+                    label={t("Ob'ekt")}
+                    active={auditSortKey === "entity"}
+                    direction={auditSortDir}
+                    onSort={() => handleAuditSort("entity")}
+                  />
                 </tr>
               </thead>
               <tbody>
-                {auditLogs.map((log) => (
+                {sortedAuditLogs.map((log, index) => (
                   <tr key={log.id} className="hover:bg-slate-50">
+                    <td className="col-index font-mono text-xs text-slate-500">{index + 1}</td>
                     <td className="whitespace-nowrap text-slate-500">
                       {new Date(log.createdAt).toLocaleString("uz-UZ")}
                     </td>

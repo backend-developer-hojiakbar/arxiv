@@ -540,6 +540,7 @@ export const russianTranslations: Record<string, string> = {
   "Tanlangan": "Выбратьed",
   "Tanlangan fayl": "Выбратьed file",
   "Tanlash": "Выбрать",
+  "Tartib raqami": "№",
   "Tasdiqlayman, Joyida": "Confirm, in place",
   "Tavsif": "Описание",
   "Tavsif kiritilmagan": "Описание не указано",
@@ -580,6 +581,7 @@ export const russianTranslations: Record<string, string> = {
   "Ushbu HEMIS kodli talaba bazada topildi! Ma'lumotlar yuklandi.": "Студент с этим кодом HEMIS найден в базе! Данные загружены.",
   "Ushbu kunda topshirilgan yangi arxiv hujjatlari soni": "Количество новых архивных документов, принятых сегодня",
   "Ushbu talabaning raqamli hujjati muvaffaqiyatli arxivlandi va tizimda saqlandi.": "Цифровой документ этого студента успешно архивирован и сохранён в системе.",
+  "Ustun bo'yicha saralangan": "Сортировка по столбцу",
   "Vaqt": "Time",
   "Vaqtincha olib ketdi (Mas'ul shaxs)": "Temporarily taken (responsible лицо)",
   "Vaqtinchalik berish (Rent file)": "Temporary checkout",
@@ -655,4 +657,5 @@ export const russianTranslations: Record<string, string> = {
   "ta yozuv": "записей",
   "tasdiqlash zaxirasi": "подтвердить zaxirasi",
   "yuklash": "загрузка",
+  "№": "№",
 };
