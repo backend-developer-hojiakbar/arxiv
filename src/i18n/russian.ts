@@ -140,6 +140,8 @@ export const russianTranslations: Record<string, string> = {
   "Faqat .pdf formatida, maksimal 30 MB": "PDF only, max 30 MB",
   "Faqat PDF formatini yuklashingiz mumkin (.pdf)": "Only PDF format всеowed (.pdf)",
   "Faqat PDF yuklash ruxsat etiladi": "Only PDF загрузка всеowed",
+  "Faqat amaldagi hujjatlar": "Только действующие документы",
+  "Faqat eskirgan hujjatlar": "Только просроченные документы",
   "Faqat ko'ruvchi (Rahbariyat)": "Наблюдатель only (управление)",
   "Faqat rasmiy PDF formatidagi fayl yuklang (Maksimal 15 MB)": "Загрузка official PDF only (max 15 MB)",
   "Farg'ona Jamoat Salomatligi Tibbiyot Instituti": "Ферганский институт общественного здравоохранения",

@@ -129,6 +129,8 @@ export const EN_OVERRIDES = {
   "Yaratuvchi": "Developed by",
   "Tartib raqami": "No.",
   "Ustun bo'yicha saralangan": "Sorted by column",
+  "Faqat eskirgan hujjatlar": "Expired documents only",
+  "Faqat amaldagi hujjatlar": "Active documents only",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -256,4 +258,6 @@ export const RU_FROM_EN_OVERRIDES = {
   "Yaratuvchi": "Разработчик",
   "Tartib raqami": "№",
   "Ustun bo'yicha saralangan": "Сортировка по столбцу",
+  "Faqat eskirgan hujjatlar": "Только просроченные документы",
+  "Faqat amaldagi hujjatlar": "Только действующие документы",
 };

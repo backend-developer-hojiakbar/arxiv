@@ -102,6 +102,8 @@ const EXTRA_ENTRIES = {
   "Tartib raqami": "№",
   "№": "№",
   "Ustun bo'yicha saralangan": "Устун бўйича сараланган",
+  "Faqat eskirgan hujjatlar": "Фақат эскирган ҳужжатлар",
+  "Faqat amaldagi hujjatlar": "Фақат амалдаги ҳужжатлар",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 

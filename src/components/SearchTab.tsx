@@ -12,7 +12,6 @@ import {
   getDocumentPersonLabel,
   getDocumentRowClass,
   getExpiryBadgeClass,
-  getStatusStyle,
   isDocumentExpired,
 } from "../utils/format.ts";
 import { UserRole } from "../types.ts";
@@ -23,9 +22,13 @@ import DocumentTableActions from "./DocumentTableActions.tsx";
 import ConfirmDeleteDialog from "./ConfirmDeleteDialog.tsx";
 import DocumentDetailDrawer from "./DocumentDetailDrawer.tsx";
 import SortableTableHeader from "./SortableTableHeader.tsx";
+import ExpiryFilterHeader from "./ExpiryFilterHeader.tsx";
 import {
   type DocumentSortKey,
+  type ExpiryFilter,
   type SortDir,
+  cycleExpiryFilter,
+  expiryFilterToQuery,
   sortDocuments,
   toggleSortKey,
 } from "../utils/tableSort.ts";
@@ -71,6 +74,7 @@ export default function SearchTab({
   const [printSlipDoc, setPrintSlipDoc] = useState<any>(null);
   const [sortKey, setSortKey] = useState<DocumentSortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [expiryFilter, setExpiryFilter] = useState<ExpiryFilter>("all");
 
   // Load categories & cabinets for filters
   useEffect(() => {
@@ -114,18 +118,26 @@ export default function SearchTab({
   const canDelete = currentUser?.role === UserRole.ADMIN;
 
   const searchDocuments = async (
-    overrideParams?: { categoryId?: string; cabinetId?: string; docDate?: string; page?: number },
+    overrideParams?: {
+      categoryId?: string;
+      cabinetId?: string;
+      docDate?: string;
+      page?: number;
+      expiryFilter?: ExpiryFilter;
+    },
     background = false
   ) => {
     if (!background) setLoading(true);
     setError(null);
     const nextPage = overrideParams?.page ?? page;
     try {
+      const activeExpiryFilter = overrideParams?.expiryFilter ?? expiryFilter;
       const filters = {
         q,
         categoryId: overrideParams?.categoryId !== undefined ? overrideParams.categoryId : categoryId,
         cabinetId: overrideParams?.cabinetId !== undefined ? overrideParams.cabinetId : cabinetId,
         docDate: overrideParams?.docDate !== undefined ? overrideParams.docDate : filterDate,
+        expired: expiryFilterToQuery(activeExpiryFilter),
         page: nextPage,
         limit: PAGE_SIZE,
       };
@@ -152,10 +164,18 @@ export default function SearchTab({
     setCategoryId("");
     setCabinetId("");
     setFilterDate("");
+    setExpiryFilter("all");
     setPage(1);
     setTimeout(() => {
-      searchDocuments({ categoryId: "", cabinetId: "", docDate: "", page: 1 });
+      searchDocuments({ categoryId: "", cabinetId: "", docDate: "", page: 1, expiryFilter: "all" });
     }, 50);
+  };
+
+  const handleExpiryFilterCycle = () => {
+    const next = cycleExpiryFilter(expiryFilter);
+    setExpiryFilter(next);
+    setPage(1);
+    searchDocuments({ page: 1, expiryFilter: next });
   };
 
   const goToPage = (nextPage: number) => {
@@ -249,7 +269,13 @@ export default function SearchTab({
           )}
         </div>
         <div className="text-xs text-slate-400">
-          {sortKey ? t("Ustun bo'yicha saralangan") : t("Sana bo'yicha saralangan (Yangi birinchi)")}
+          {expiryFilter === "expired"
+            ? t("Faqat eskirgan hujjatlar")
+            : expiryFilter === "active"
+              ? t("Faqat amaldagi hujjatlar")
+              : sortKey
+                ? t("Ustun bo'yicha saralangan")
+                : t("Sana bo'yicha saralangan (Yangi birinchi)")}
         </div>
       </div>
 
@@ -306,12 +332,11 @@ export default function SearchTab({
                   direction={sortDir}
                   onSort={() => handleSort("location")}
                 />
-                <SortableTableHeader
+                <ExpiryFilterHeader
                   className="px-3 py-2.5"
                   label={t("Holat")}
-                  active={sortKey === "status"}
-                  direction={sortDir}
-                  onSort={() => handleSort("status")}
+                  filter={expiryFilter}
+                  onCycle={handleExpiryFilterCycle}
                 />
                 <th className="px-3 py-2.5 text-right">{t("Amallar")}</th>
               </tr>
@@ -351,10 +376,11 @@ export default function SearchTab({
                     </div>
                   </td>
                   <td>
-                    <div className="table-cell-inner flex flex-wrap gap-1">
-                      <span className={getStatusStyle(doc.status)}>{t(doc.status)}</span>
-                      {expired && (
+                    <div className="table-cell-inner">
+                      {expired ? (
                         <span className={getExpiryBadgeClass(true)}>{t("Eskirgan")}</span>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
                       )}
                     </div>
                   </td>

@@ -28,7 +28,21 @@ function compareValues(a: string | number, b: string | number, dir: SortDir): nu
   return 0;
 }
 
-export type DocumentSortKey = "person" | "category" | "date" | "location" | "status";
+export type DocumentSortKey = "person" | "category" | "date" | "location";
+
+export type ExpiryFilter = "all" | "expired" | "active";
+
+export function cycleExpiryFilter(current: ExpiryFilter): ExpiryFilter {
+  if (current === "all") return "expired";
+  if (current === "expired") return "active";
+  return "all";
+}
+
+export function expiryFilterToQuery(filter: ExpiryFilter): boolean | undefined {
+  if (filter === "expired") return true;
+  if (filter === "active") return false;
+  return undefined;
+}
 
 export function sortDocuments(
   documents: any[],
@@ -57,10 +71,6 @@ export function sortDocuments(
       case "location":
         av = `${a.cabinet?.name || a.cabinetId}-${String(a.floor).padStart(2, "0")}`;
         bv = `${b.cabinet?.name || b.cabinetId}-${String(b.floor).padStart(2, "0")}`;
-        break;
-      case "status":
-        av = a.status || "";
-        bv = b.status || "";
         break;
     }
 

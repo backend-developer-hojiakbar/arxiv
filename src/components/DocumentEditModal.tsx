@@ -8,7 +8,6 @@ import { motion } from "motion/react";
 import { X } from "lucide-react";
 import { api } from "../api.js";
 import { getCategoryFlowType } from "../apiMappers.ts";
-import { DocumentStatus } from "../types.js";
 import { useTranslation } from "./LanguageContext.tsx";
 import { getDocumentPersonLabel, isDocumentExpired } from "../utils/format.ts";
 
@@ -29,7 +28,6 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
   const [students, setStudents] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
 
-  const [editStatus, setEditStatus] = useState<DocumentStatus>(DocumentStatus.JOYIDA);
   const [editCategoryId, setEditCategoryId] = useState("");
   const [editCabinetId, setEditCabinetId] = useState("");
   const [editFloor, setEditFloor] = useState<number>(1);
@@ -42,11 +40,8 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editFileBase64, setEditFileBase64] = useState("");
   const [editFileError, setEditFileError] = useState("");
-  const [statusNotesAdd, setStatusNotesAdd] = useState("");
-
   useEffect(() => {
     const person = getDocumentPersonLabel(doc);
-    setEditStatus(doc.status);
     setEditCategoryId(doc.categoryId);
     setEditCabinetId(doc.cabinetId);
     setEditFloor(doc.floor);
@@ -56,7 +51,6 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
     setEditStudentId(doc.studentId || doc.student?.id || "");
     setEditEmployeeId(doc.employeeId || doc.employee?.id || "");
     setEditNotes(doc.notes || "");
-    setStatusNotesAdd("");
     setEditFile(null);
     setEditFileBase64("");
     setEditFileError("");
@@ -107,11 +101,6 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
     e.preventDefault();
     setSaving(true);
     try {
-      let finalNotes = editNotes;
-      if (editStatus === DocumentStatus.BERILGAN && statusNotesAdd.trim()) {
-        finalNotes = `${editNotes}\n[Qabul: Kimga berildi: ${statusNotesAdd.trim()} - Sana: ${new Date().toLocaleDateString()}]`;
-      }
-
       const flowType = getCategoryFlowType(editCategoryId, categories);
       let personType = "none";
       let studentId: string | null = null;
@@ -142,7 +131,6 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
       }
 
       const payload: Record<string, unknown> = {
-        status: editStatus,
         categoryId: editCategoryId,
         cabinetId: editCabinetId,
         floor: Number(editFloor),
@@ -152,7 +140,7 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
         personType,
         studentId,
         employeeId,
-        notes: finalNotes,
+        notes: editNotes,
       };
 
       if (editFileBase64) {
@@ -288,36 +276,6 @@ export default function DocumentEditModal({ doc, onClose, onSaved }: DocumentEdi
                   </option>
                 ))}
               </select>
-            </div>
-          )}
-
-          <div>
-            <label className="field-label">{t("Hujjat Holati (*)")}</label>
-            <div className="grid grid-cols-3 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
-              {["Joyida", "Berilgan", "Yo'q qilingan"].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setEditStatus(st as DocumentStatus)}
-                  className={`rounded-md py-2 text-xs font-medium ${editStatus === st ? "bg-primary-600 text-white" : "text-slate-600 hover:bg-white"}`}
-                >
-                  {t(st)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {editStatus === DocumentStatus.BERILGAN && (
-            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <label className="field-label">{t("Kimga va nima maqsadda chiqarilgan? (*)")}</label>
-              <input
-                type="text"
-                required
-                value={statusNotesAdd}
-                onChange={(e) => setStatusNotesAdd(e.target.value)}
-                placeholder={t("Masalan: Dekanat boshlig'i Soliyevga vaqtinchalik reyting uchun")}
-                className={editInputClass}
-              />
             </div>
           )}
 

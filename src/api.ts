@@ -353,6 +353,7 @@ export const api = {
     docDate?: string;
     personType?: string;
     status?: string;
+    expired?: boolean;
     page?: number;
     limit?: number;
   }) => {
@@ -364,6 +365,8 @@ export const api = {
     if (params.docDate) query.set("doc_date", params.docDate);
     if (params.personType) query.set("person_type", params.personType);
     if (params.status) query.set("status", params.status);
+    if (params.expired === true) query.set("expired", "true");
+    if (params.expired === false) query.set("expired", "false");
     if (params.page) query.set("page", String(params.page));
     if (params.limit) query.set("size", String(params.limit));
 

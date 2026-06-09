@@ -140,6 +140,8 @@ export const englishTranslations: Record<string, string> = {
   "Faqat .pdf formatida, maksimal 30 MB": "PDF only, max 30 MB",
   "Faqat PDF formatini yuklashingiz mumkin (.pdf)": "Only PDF format allowed (.pdf)",
   "Faqat PDF yuklash ruxsat etiladi": "Only PDF upload allowed",
+  "Faqat amaldagi hujjatlar": "Active documents only",
+  "Faqat eskirgan hujjatlar": "Expired documents only",
   "Faqat ko'ruvchi (Rahbariyat)": "Viewer only (management)",
   "Faqat rasmiy PDF formatidagi fayl yuklang (Maksimal 15 MB)": "Upload official PDF only (max 15 MB)",
   "Farg'ona Jamoat Salomatligi Tibbiyot Instituti": "Fergana Public Health Medical Institute",

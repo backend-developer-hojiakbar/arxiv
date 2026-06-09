@@ -224,20 +224,6 @@ export default function DocumentDetailDrawer({
                     </span>
                   </div>
                 )}
-                {doc.status === "Berilgan" && (
-                  <>
-                    <div>
-                      <span className="field-label !mb-0">{t("Hujjatni chiqargan xodim")}</span>
-                      <span className="font-medium text-slate-800 text-plain">{doc.issuer?.fullName || "—"}</span>
-                    </div>
-                    <div>
-                      <span className="field-label !mb-0">{t("Chiqarilgan sana & vaqt")}</span>
-                      <span className="font-mono text-xs text-neutral-600">
-                        {new Date(doc.issuedAt).toLocaleString("uz-UZ")}
-                      </span>
-                    </div>
-                  </>
-                )}
                 <div className="col-span-2">
                   <span className="field-label !mb-0">{t("Shkafdagi aniq izoh variantlari")}</span>
                   <p className="border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs italic text-neutral-700">

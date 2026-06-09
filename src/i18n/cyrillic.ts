@@ -140,6 +140,8 @@ export const cyrillicTranslations: Record<string, string> = {
   "Faqat .pdf formatida, maksimal 30 MB": "Фақат .pdf форматида, максимал 30 МБ",
   "Faqat PDF formatini yuklashingiz mumkin (.pdf)": "Фақат PDF форматини юклашингиз мумкин (.pdf)",
   "Faqat PDF yuklash ruxsat etiladi": "Фақат PDF юклаш рухсат этилади",
+  "Faqat amaldagi hujjatlar": "Фақат амалдаги ҳужжатлар",
+  "Faqat eskirgan hujjatlar": "Фақат эскирган ҳужжатлар",
   "Faqat ko'ruvchi (Rahbariyat)": "Фақат кўрувчи (Раҳбарият)",
   "Faqat rasmiy PDF formatidagi fayl yuklang (Maksimal 15 MB)": "Фақат расмий PDF форматидаги файл юкланг (Максимал 15 МБ)",
   "Farg'ona Jamoat Salomatligi Tibbiyot Instituti": "Фарғона Жамоат Саломатлиги Тиббиёт Институти",

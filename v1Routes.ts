@@ -134,6 +134,11 @@ function serializeDocument(doc: any, db: ReturnType<typeof readDB>) {
   };
 }
 
+function isDocExpired(expiryYear?: number | null): boolean {
+  if (expiryYear == null || Number.isNaN(expiryYear)) return false;
+  return new Date().getFullYear() > expiryYear;
+}
+
 function filterDocuments(db: ReturnType<typeof readDB>, query: Record<string, unknown>) {
   let filtered = db.documents.filter((d) => !d.deletedAt);
   const q = query.query || query.q;
@@ -143,6 +148,7 @@ function filterDocuments(db: ReturnType<typeof readDB>, query: Record<string, un
   const dateFrom = query.date_from || query.dateFrom;
   const dateTo = query.date_to || query.dateTo;
   const status = query.status;
+  const expired = query.expired;
   const floor = query.floor;
   const personType = query.person_type || query.personType;
 
@@ -176,6 +182,11 @@ function filterDocuments(db: ReturnType<typeof readDB>, query: Record<string, un
   if (categoryId) filtered = filtered.filter((d) => d.categoryId === String(categoryId));
   if (cabinetId) filtered = filtered.filter((d) => d.cabinetId === String(cabinetId));
   if (status) filtered = filtered.filter((d) => d.status === String(status));
+  if (expired === "true" || expired === true) {
+    filtered = filtered.filter((d) => isDocExpired(d.expiryYear));
+  } else if (expired === "false" || expired === false) {
+    filtered = filtered.filter((d) => !isDocExpired(d.expiryYear));
+  }
   if (docDate) filtered = filtered.filter((d) => d.docDate === String(docDate));
   if (dateFrom) filtered = filtered.filter((d) => d.receivedAt >= String(dateFrom));
   if (dateTo) {
