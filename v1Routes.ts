@@ -215,6 +215,39 @@ function savePdfBuffer(docId: string, buffer: Buffer, originalFilename: string) 
 export function createV1Router(): Router {
   const router = Router();
 
+  router.get("/speech/token", async (req, res) => {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
+    const key = process.env.AZURE_SPEECH_KEY || "";
+    const region = process.env.AZURE_SPEECH_REGION || "";
+    if (!key || !region) {
+      res.status(503).json({
+        error: "Azure Speech sozlanmagan. AZURE_SPEECH_KEY va AZURE_SPEECH_REGION kerak.",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`, {
+        method: "POST",
+        headers: { "Ocp-Apim-Subscription-Key": key },
+      });
+      if (!response.ok) {
+        res.status(502).json({ error: "Azure Speech token olinmadi" });
+        return;
+      }
+      const token = await response.text();
+      res.json({
+        token,
+        region,
+        language: process.env.AZURE_SPEECH_LANGUAGE || "uz-UZ",
+      });
+    } catch {
+      res.status(502).json({ error: "Azure Speech token olinmadi" });
+    }
+  });
+
   // --- Auth ---
   router.post("/auth/login", (req, res) => {
     const { username, password } = req.body;

@@ -97,11 +97,12 @@ export default function SearchTab({
     if (initialFilters) {
       if (initialFilters.categoryId) setCategoryId(initialFilters.categoryId);
       if (initialFilters.cabinetId) setCabinetId(initialFilters.cabinetId);
-      // Automatically trigger a search
+      if (initialFilters.q) setQ(initialFilters.q);
       setPage(1);
       searchDocuments({
         categoryId: initialFilters.categoryId,
         cabinetId: initialFilters.cabinetId,
+        q: initialFilters.q,
         page: 1,
       });
     } else {
@@ -120,10 +121,12 @@ export default function SearchTab({
 
   const searchDocuments = async (
     overrideParams?: {
+      q?: string;
       categoryId?: string;
       cabinetId?: string;
       docDate?: string;
       page?: number;
+      expiryFilter?: ExpiryFilter;
     },
     background = false
   ) => {
@@ -132,7 +135,7 @@ export default function SearchTab({
     const nextPage = overrideParams?.page ?? page;
     try {
       const filters = {
-        q,
+        q: overrideParams?.q !== undefined ? overrideParams.q : q,
         categoryId: overrideParams?.categoryId !== undefined ? overrideParams.categoryId : categoryId,
         cabinetId: overrideParams?.cabinetId !== undefined ? overrideParams.cabinetId : cabinetId,
         docDate: overrideParams?.docDate !== undefined ? overrideParams.docDate : filterDate,

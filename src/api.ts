@@ -658,6 +658,10 @@ export const api = {
     return all;
   },
 
+  getSpeechToken: async () => {
+    return request<{ token: string; region: string; language: string }>("/speech/token");
+  },
+
   getStudents: async (query?: string) => {
     const q = query ? `?query=${encodeURIComponent(query)}` : "";
     const raw = await request<Record<string, unknown>[]>(`/students${q}`);

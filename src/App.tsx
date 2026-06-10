@@ -18,6 +18,7 @@ import { Menu } from "lucide-react";
 import { useTranslation } from "./components/LanguageContext.tsx";
 import LanguageToggle from "./components/LanguageToggle.tsx";
 import AppLogo from "./components/AppLogo.tsx";
+import VoiceAssistant from "./components/VoiceAssistant.tsx";
 
 const VALID_TABS = new Set(["dashboard", "search", "intake", "documents", "settings", "admin"]);
 
@@ -296,6 +297,13 @@ export default function App() {
           </p>
         </footer>
       </div>
+
+      <VoiceAssistant
+        onOpenSearch={(query) => {
+          setVisitedTabs((prev) => new Set(prev).add("search"));
+          handleNavWithFilters("search", { q: query });
+        }}
+      />
     </div>
   );
 }

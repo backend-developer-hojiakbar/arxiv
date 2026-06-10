@@ -108,6 +108,18 @@ const EXTRA_ENTRIES = {
   "Holat: faqat eskirgan": "Ҳолат: фақат эскирган",
   "Holat: faqat yaroqli": "Ҳолат: фақат яроқли",
   "Bu holat filtri bo'yicha yozuv topilmadi": "Бу ҳолат фильтри бўйича ёзув топилмади",
+  "Ziyrak ovozli yordamchi": "Ziyrak ovozli yordamchi",
+  "Ziyrak tinglamoqda — Hey Ziyrak deb ayting": "Ziyrak тингламоқда — Hey Ziyrak деб айтинг",
+  "Ziyrak javob bermoqda...": "Ziyrak жавоб бермоқда...",
+  "Ziyrak tinglayapti...": "Ziyrak тинглайапти...",
+  "Ziyrak qidiryapti...": "Ziyrak қидиряпти...",
+  "Ziyrak: topildi": "Ziyrak: топилди",
+  "Ziyrak: topilmadi": "Ziyrak: топилмади",
+  "Ziyrak: so'rov eshitilmadi": "Ziyrak: сўров эшитилмади",
+  "Ziyrak: qidiruv xatosi": "Ziyrak: қидирув хатоси",
+  "Ziyrak mikrofon xatosi": "Ziyrak: микрофон хатоси",
+  "Ziyrak ishga tushmadi": "Ziyrak ишга тушмади",
+  "Azure Speech sozlanmagan": "Azure Speech созланмаган",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 
