@@ -216,8 +216,11 @@ export function createV1Router(): Router {
   const router = Router();
 
   router.get("/speech/token", async (req, res) => {
-    const user = requireAuth(req, res);
-    if (!user) return;
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Avtorizatsiya talab qilinadi" });
+      return;
+    }
 
     const key = process.env.AZURE_SPEECH_KEY || "";
     const region = process.env.AZURE_SPEECH_REGION || "";

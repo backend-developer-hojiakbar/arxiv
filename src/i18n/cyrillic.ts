@@ -657,6 +657,7 @@ export const cyrillicTranslations: Record<string, string> = {
   "Ziyrak mikrofon xatosi": "Ziyrak: микрофон хатоси",
   "Ziyrak ovozli yordamchi": "Ziyrak ovozli yordamchi",
   "Ziyrak qidiryapti...": "Ziyrak қидиряпти...",
+  "Ziyrak tekshirilmoqda...": "Зийрак текширилмоқда...",
   "Ziyrak tinglamoqda — Hey Ziyrak deb ayting": "Ziyrak тингламоқда — Hey Ziyrak деб айтинг",
   "Ziyrak tinglayapti...": "Ziyrak тинглайапти...",
   "Ziyrak: qidiruv xatosi": "Ziyrak: қидирув хатоси",

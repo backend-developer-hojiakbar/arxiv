@@ -4,6 +4,7 @@
  */
 
 import { api } from "../api.ts";
+import { loadAzureSpeechSdk, type AzureSpeechSdk } from "./speechSdkLoader.ts";
 
 export interface SpeechSession {
   token: string;
@@ -11,19 +12,9 @@ export interface SpeechSession {
   language: string;
 }
 
-type SpeechSdk = typeof import("microsoft-cognitiveservices-speech-sdk");
-
-let sdkPromise: Promise<SpeechSdk> | null = null;
 let cachedSession: SpeechSession | null = null;
 let cachedAt = 0;
 const TOKEN_TTL_MS = 8 * 60 * 1000;
-
-async function getSdk(): Promise<SpeechSdk> {
-  if (!sdkPromise) {
-    sdkPromise = import("microsoft-cognitiveservices-speech-sdk");
-  }
-  return sdkPromise;
-}
 
 async function getSession(): Promise<SpeechSession> {
   if (cachedSession && Date.now() - cachedAt < TOKEN_TTL_MS) {
@@ -35,7 +26,7 @@ async function getSession(): Promise<SpeechSession> {
 }
 
 async function buildConfig(session: SpeechSession) {
-  const sdk = await getSdk();
+  const sdk = await loadAzureSpeechSdk();
   const config = sdk.SpeechConfig.fromAuthorizationToken(session.token, session.region);
   config.speechRecognitionLanguage = session.language;
   config.speechSynthesisLanguage = session.language;
@@ -46,13 +37,8 @@ async function buildConfig(session: SpeechSession) {
 }
 
 export async function checkAzureSpeechAvailable(): Promise<boolean> {
-  try {
-    await getSession();
-    await getSdk();
-    return true;
-  } catch {
-    return false;
-  }
+  await getSession();
+  return true;
 }
 
 export function speakText(text: string): Promise<void> {
@@ -85,7 +71,7 @@ export function speakText(text: string): Promise<void> {
 
 export function listenOnce(timeoutMs = 9000): Promise<string> {
   return new Promise(async (resolve, reject) => {
-    let recognizer: import("microsoft-cognitiveservices-speech-sdk").SpeechRecognizer | null = null;
+    let recognizer: InstanceType<AzureSpeechSdk["SpeechRecognizer"]> | null = null;
     let finished = false;
 
     const finish = (text: string) => {

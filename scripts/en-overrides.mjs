@@ -150,6 +150,7 @@ export const EN_OVERRIDES = {
   "Mikrofon ruxsati so'ralmoqda...": "Requesting microphone permission...",
   "Mikrofon ruxsati berilmadi": "Microphone permission denied",
   "Ovoz xizmati mavjud emas": "Voice service unavailable",
+  "Ziyrak tekshirilmoqda...": "Checking Ziyrak...",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -298,4 +299,5 @@ export const RU_FROM_EN_OVERRIDES = {
   "Mikrofon ruxsati so'ralmoqda...": "Запрос разрешения микрофона...",
   "Mikrofon ruxsati berilmadi": "Доступ к микрофону не предоставлен",
   "Ovoz xizmati mavjud emas": "Голосовой сервис недоступен",
+  "Ziyrak tekshirilmoqda...": "Проверка Ziyrak...",
 };

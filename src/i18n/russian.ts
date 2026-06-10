@@ -657,6 +657,7 @@ export const russianTranslations: Record<string, string> = {
   "Ziyrak mikrofon xatosi": "Ziyrak: ошибка микрофона",
   "Ziyrak ovozli yordamchi": "Голосовой помощник Ziyrak",
   "Ziyrak qidiryapti...": "Ziyrak ищет...",
+  "Ziyrak tekshirilmoqda...": "Проверка Ziyrak...",
   "Ziyrak tinglamoqda — Hey Ziyrak deb ayting": "Ziyrak слушает — скажите Hey Ziyrak",
   "Ziyrak tinglayapti...": "Ziyrak слушает...",
   "Ziyrak: qidiruv xatosi": "Ziyrak: ошибка поиска",

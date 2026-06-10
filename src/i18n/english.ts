@@ -657,6 +657,7 @@ export const englishTranslations: Record<string, string> = {
   "Ziyrak mikrofon xatosi": "Ziyrak: microphone error",
   "Ziyrak ovozli yordamchi": "Ziyrak voice assistant",
   "Ziyrak qidiryapti...": "Ziyrak searching...",
+  "Ziyrak tekshirilmoqda...": "Checking Ziyrak...",
   "Ziyrak tinglamoqda — Hey Ziyrak deb ayting": "Ziyrak listening — say Hey Ziyrak",
   "Ziyrak tinglayapti...": "Ziyrak listening...",
   "Ziyrak: qidiruv xatosi": "Ziyrak: search error",

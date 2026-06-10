@@ -659,7 +659,26 @@ export const api = {
   },
 
   getSpeechToken: async () => {
-    return request<{ token: string; region: string; language: string }>("/speech/token");
+    const speechBase =
+      import.meta.env.VITE_SPEECH_API_BASE_URL ||
+      (import.meta.env.DEV ? API_BASE : "/api/v1");
+
+    const token = getAuthToken();
+    const headers = new Headers();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+
+    const response = await fetch(`${speechBase}/speech/token`, { headers });
+    if (!response.ok) {
+      let errMsg = "Azure Speech token olinmadi";
+      try {
+        const data = await response.json();
+        errMsg = parseApiError(data, errMsg);
+      } catch {
+        /* ignore */
+      }
+      throw new Error(errMsg);
+    }
+    return response.json() as Promise<{ token: string; region: string; language: string }>;
   },
 
   getStudents: async (query?: string) => {

@@ -9,7 +9,14 @@ import { api } from "../api.ts";
 import { getDocumentPersonLabel } from "../utils/format.ts";
 import { extractQueryFromWake, getTimeGreeting } from "../services/azureSpeech.ts";
 import { ensureMicrophoneAccess } from "../services/microphone.ts";
-import { listenForWake, listenOnce, resolveSpeechMode, speak, type SpeechMode } from "../services/speechService.ts";
+import {
+  getLastAzureSpeechError,
+  listenForWake,
+  listenOnce,
+  resolveSpeechMode,
+  speak,
+  type SpeechMode,
+} from "../services/speechService.ts";
 import { useTranslation } from "./LanguageContext.tsx";
 
 type AssistantState = "off" | "listening" | "greeting" | "query" | "searching" | "speaking" | "error";
@@ -121,11 +128,17 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
   onWakeRef.current = onWake;
 
   const startAssistant = useCallback(async () => {
-    if (speechMode === "checking") return;
+    let mode = speechMode;
+    if (mode === "checking" || mode === "none") {
+      setStatusText(t("Ziyrak tekshirilmoqda..."));
+      mode = await resolveSpeechMode(true);
+      setSpeechMode(mode);
+    }
 
-    if (speechMode === "none") {
+    if (mode === "none") {
       setState("error");
-      setStatusText(t("Ovoz xizmati mavjud emas"));
+      const detail = getLastAzureSpeechError();
+      setStatusText(detail || t("Ovoz xizmati mavjud emas"));
       return;
     }
 

@@ -20,12 +20,32 @@ import {
 export type SpeechMode = "azure" | "browser" | "none";
 
 let mode: SpeechMode | null = null;
+let lastAzureError = "";
 
-export async function resolveSpeechMode(): Promise<SpeechMode> {
-  if (mode) return mode;
-  if (await checkAzureSpeechAvailable()) {
-    mode = "azure";
-  } else if (browserSpeechSupported()) {
+export function getLastAzureSpeechError(): string {
+  return lastAzureError;
+}
+
+export function resetSpeechMode(): void {
+  mode = null;
+  lastAzureError = "";
+}
+
+export async function resolveSpeechMode(force = false): Promise<SpeechMode> {
+  if (mode && !force) return mode;
+  if (force) mode = null;
+
+  try {
+    if (await checkAzureSpeechAvailable()) {
+      lastAzureError = "";
+      mode = "azure";
+      return mode;
+    }
+  } catch (err: any) {
+    lastAzureError = err?.message || "Azure Speech token olinmadi";
+  }
+
+  if (browserSpeechSupported()) {
     mode = "browser";
   } else {
     mode = "none";
