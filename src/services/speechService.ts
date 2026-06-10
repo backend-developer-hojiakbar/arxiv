@@ -4,12 +4,12 @@
  */
 
 import {
-  checkAzureSpeechAvailable,
-  listenForWakePhrase as azureListenWake,
-  listenOnce as azureListenOnce,
-  speakText as azureSpeak,
+  checkOpenAISpeechAvailable,
+  listenForWakePhrase as openaiListenWake,
+  listenOnce as openaiListenOnce,
+  speakText as openaiSpeak,
   type WakeListener,
-} from "./azureSpeech.ts";
+} from "./openaiSpeech.ts";
 import {
   browserListenForWake,
   browserListenOnce,
@@ -17,18 +17,23 @@ import {
   browserSpeechSupported,
 } from "./browserSpeech.ts";
 
-export type SpeechMode = "azure" | "browser" | "none";
+export type SpeechMode = "openai" | "browser" | "none";
 
 let mode: SpeechMode | null = null;
-let lastAzureError = "";
+let lastSpeechError = "";
 
+export function getLastSpeechError(): string {
+  return lastSpeechError;
+}
+
+/** @deprecated use getLastSpeechError */
 export function getLastAzureSpeechError(): string {
-  return lastAzureError;
+  return lastSpeechError;
 }
 
 export function resetSpeechMode(): void {
   mode = null;
-  lastAzureError = "";
+  lastSpeechError = "";
 }
 
 export async function resolveSpeechMode(force = false): Promise<SpeechMode> {
@@ -36,13 +41,13 @@ export async function resolveSpeechMode(force = false): Promise<SpeechMode> {
   if (force) mode = null;
 
   try {
-    if (await checkAzureSpeechAvailable()) {
-      lastAzureError = "";
-      mode = "azure";
+    if (await checkOpenAISpeechAvailable()) {
+      lastSpeechError = "";
+      mode = "openai";
       return mode;
     }
   } catch (err: any) {
-    lastAzureError = err?.message || "Azure Speech token olinmadi";
+    lastSpeechError = err?.message || "OpenAI ovoz xizmati mavjud emas";
   }
 
   if (browserSpeechSupported()) {
@@ -55,23 +60,21 @@ export async function resolveSpeechMode(force = false): Promise<SpeechMode> {
 
 export async function speak(text: string): Promise<void> {
   const current = await resolveSpeechMode();
-  if (current === "azure") return azureSpeak(text);
+  if (current === "openai") return openaiSpeak(text);
   if (current === "browser") return browserSpeak(text);
   throw new Error("Ovoz xizmati mavjud emas");
 }
 
 export async function listenOnce(timeoutMs = 9000): Promise<string> {
   const current = await resolveSpeechMode();
-  if (current === "azure") return azureListenOnce(timeoutMs);
+  if (current === "openai") return openaiListenOnce(timeoutMs);
   if (current === "browser") return browserListenOnce(timeoutMs);
   throw new Error("Ovoz tanish mavjud emas");
 }
 
 export async function listenForWake(onWake: (text: string) => void): Promise<WakeListener> {
   const current = await resolveSpeechMode();
-  if (current === "azure") return azureListenWake(onWake);
-  if (current === "browser") {
-    return browserListenForWake(onWake);
-  }
+  if (current === "openai") return openaiListenWake(onWake);
+  if (current === "browser") return browserListenForWake(onWake);
   throw new Error("Ovoz tanish mavjud emas");
 }

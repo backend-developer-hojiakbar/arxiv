@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { isWakePhrase } from "./azureSpeech.ts";
+import { isWakePhrase } from "./speechUtils.ts";
 
 type SpeechRecognitionCtor = new () => SpeechRecognition;
 

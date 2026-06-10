@@ -119,7 +119,7 @@ const EXTRA_ENTRIES = {
   "Ziyrak: qidiruv xatosi": "Ziyrak: қидирув хатоси",
   "Ziyrak mikrofon xatosi": "Ziyrak: микрофон хатоси",
   "Ziyrak ishga tushmadi": "Ziyrak ишга тушмади",
-  "Azure Speech sozlanmagan": "Azure Speech созланмаган",
+  "OpenAI sozlanmagan": "OpenAI созланмаган",
   "Mikrofon ruxsati so'ralmoqda...": "Микрофон рухсати сўралмоқда...",
   "Mikrofon ruxsati berilmadi": "Микрофон рухсати берилмади",
   "Ovoz xizmati mavjud emas": "Овоз хизмати мавжуд эмас",

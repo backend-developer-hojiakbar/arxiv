@@ -436,6 +436,7 @@ export const cyrillicTranslations: Record<string, string> = {
   "OXIRGI 7 KUNLIK QABUL GRAFIGI": "ОХИРГИ 7 КУНЛИК ҚАБУЛ ГРАФИГИ",
   "Ob'ekt": "Объект",
   "Ombor Kartasi:": "Омбор Картаси:",
+  "OpenAI sozlanmagan": "OpenAI созланмаган",
   "Operatsiya Turi / Tafsiloti": "Операция Тури / Тафсилоти",
   "Orqaga": "Орқага",
   "Otasining ismi": "Отасининг исми",

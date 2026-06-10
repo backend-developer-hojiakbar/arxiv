@@ -7,10 +7,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { api } from "../api.ts";
 import { getDocumentPersonLabel } from "../utils/format.ts";
-import { extractQueryFromWake, getTimeGreeting } from "../services/azureSpeech.ts";
 import { ensureMicrophoneAccess } from "../services/microphone.ts";
+import { extractQueryFromWake, getTimeGreeting } from "../services/speechUtils.ts";
 import {
-  getLastAzureSpeechError,
+  getLastSpeechError,
   listenForWake,
   listenOnce,
   resolveSpeechMode,
@@ -137,7 +137,7 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
 
     if (mode === "none") {
       setState("error");
-      const detail = getLastAzureSpeechError();
+      const detail = getLastSpeechError();
       setStatusText(detail || t("Ovoz xizmati mavjud emas"));
       return;
     }

@@ -215,39 +215,119 @@ function savePdfBuffer(docId: string, buffer: Buffer, originalFilename: string) 
 export function createV1Router(): Router {
   const router = Router();
 
-  router.get("/speech/token", async (req, res) => {
+  const speechUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+  });
+
+  function requireSpeechAuth(req: Request, res: Response): boolean {
     const authHeader = req.headers.authorization || "";
     if (!authHeader.startsWith("Bearer ")) {
       res.status(401).json({ error: "Avtorizatsiya talab qilinadi" });
+      return false;
+    }
+    return true;
+  }
+
+  function getOpenAIKey(): string {
+    return process.env.OPENAI_API_KEY || "";
+  }
+
+  router.get("/speech/status", (req, res) => {
+    if (!requireSpeechAuth(req, res)) return;
+    res.json({ available: Boolean(getOpenAIKey()) });
+  });
+
+  router.post("/speech/transcribe", speechUpload.single("audio"), async (req, res) => {
+    if (!requireSpeechAuth(req, res)) return;
+
+    const key = getOpenAIKey();
+    if (!key) {
+      res.status(503).json({ error: "OpenAI sozlanmagan. OPENAI_API_KEY kerak." });
       return;
     }
 
-    const key = process.env.AZURE_SPEECH_KEY || "";
-    const region = process.env.AZURE_SPEECH_REGION || "";
-    if (!key || !region) {
-      res.status(503).json({
-        error: "Azure Speech sozlanmagan. AZURE_SPEECH_KEY va AZURE_SPEECH_REGION kerak.",
-      });
+    if (!req.file?.buffer?.length) {
+      res.status(400).json({ error: "Audio fayl kerak" });
       return;
     }
 
     try {
-      const response = await fetch(`https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`, {
+      const formData = new FormData();
+      const blob = new Blob([req.file.buffer], { type: req.file.mimetype || "audio/webm" });
+      formData.append("file", blob, req.file.originalname || "audio.webm");
+      formData.append("model", process.env.OPENAI_WHISPER_MODEL || "whisper-1");
+
+      const language = process.env.OPENAI_SPEECH_LANGUAGE || "uz";
+      if (language) formData.append("language", language);
+
+      const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
         method: "POST",
-        headers: { "Ocp-Apim-Subscription-Key": key },
+        headers: { Authorization: `Bearer ${key}` },
+        body: formData,
       });
+
       if (!response.ok) {
-        res.status(502).json({ error: "Azure Speech token olinmadi" });
+        res.status(502).json({
+          error:
+            response.status === 401
+              ? "OpenAI kaliti noto'g'ri yoki muddati tugagan"
+              : "Ovoz tanilmadi",
+        });
         return;
       }
-      const token = await response.text();
-      res.json({
-        token,
-        region,
-        language: process.env.AZURE_SPEECH_LANGUAGE || "uz-UZ",
-      });
+
+      const data = (await response.json()) as { text?: string };
+      res.json({ text: data.text || "" });
     } catch {
-      res.status(502).json({ error: "Azure Speech token olinmadi" });
+      res.status(502).json({ error: "Ovoz tanish xatosi" });
+    }
+  });
+
+  router.post("/speech/synthesize", async (req, res) => {
+    if (!requireSpeechAuth(req, res)) return;
+
+    const key = getOpenAIKey();
+    if (!key) {
+      res.status(503).json({ error: "OpenAI sozlanmagan. OPENAI_API_KEY kerak." });
+      return;
+    }
+
+    const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+    if (!text) {
+      res.status(400).json({ error: "Matn kerak" });
+      return;
+    }
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/audio/speech", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: process.env.OPENAI_TTS_MODEL || "tts-1",
+          voice: process.env.OPENAI_TTS_VOICE || "nova",
+          input: text,
+        }),
+      });
+
+      if (!response.ok) {
+        res.status(502).json({
+          error:
+            response.status === 401
+              ? "OpenAI kaliti noto'g'ri yoki muddati tugagan"
+              : "Ovoz sintezi muvaffaqiyatsiz",
+        });
+        return;
+      }
+
+      const buffer = Buffer.from(await response.arrayBuffer());
+      res.setHeader("Content-Type", "audio/mpeg");
+      res.send(buffer);
+    } catch {
+      res.status(502).json({ error: "Ovoz sintezi xatosi" });
     }
   });
 
