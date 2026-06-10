@@ -169,59 +169,6 @@ async function request<T = unknown>(
   return response.json() as Promise<T>;
 }
 
-function getSpeechBase(): string {
-  return (
-    import.meta.env.VITE_SPEECH_API_BASE_URL ||
-    (import.meta.env.DEV ? API_BASE : "/api/v1")
-  );
-}
-
-async function speechRequest<T = unknown>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const token = getAuthToken();
-  const headers = new Headers(options.headers || {});
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  const response = await fetch(`${getSpeechBase()}${path}`, { ...options, headers });
-  if (!response.ok) {
-    let errMsg = "Ovoz xizmati xatosi";
-    try {
-      const data = await response.json();
-      errMsg = parseApiError(data, errMsg);
-    } catch {
-      /* ignore */
-    }
-    throw new Error(errMsg);
-  }
-
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    return (await response.blob()) as T;
-  }
-  return response.json() as Promise<T>;
-}
-
-async function speechRequestBlob(path: string, options: RequestInit = {}): Promise<Blob> {
-  const token = getAuthToken();
-  const headers = new Headers(options.headers || {});
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  const response = await fetch(`${getSpeechBase()}${path}`, { ...options, headers });
-  if (!response.ok) {
-    let errMsg = "Ovoz sintezi xatosi";
-    try {
-      const data = await response.json();
-      errMsg = parseApiError(data, errMsg);
-    } catch {
-      /* ignore */
-    }
-    throw new Error(errMsg);
-  }
-  return response.blob();
-}
-
 async function fetchAllDocumentsForStats() {
   const documents: ReturnType<typeof mapDocument>[] = [];
   let page = 1;
@@ -712,22 +659,21 @@ export const api = {
   },
 
   getSpeechStatus: async () => {
-    return speechRequest<{ available: boolean }>("/speech/status");
+    return request<{ available: boolean }>("/speech/status");
   },
 
   transcribeAudio: async (audio: Blob) => {
     const formData = new FormData();
     formData.append("audio", audio, "recording.webm");
-    return speechRequest<{ text: string }>("/speech/transcribe", {
+    return request<{ text: string }>("/speech/transcribe", {
       method: "POST",
       body: formData,
     });
   },
 
   synthesizeSpeech: async (text: string) => {
-    return speechRequestBlob("/speech/synthesize", {
+    return request<Blob>("/speech/synthesize", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     });
   },
