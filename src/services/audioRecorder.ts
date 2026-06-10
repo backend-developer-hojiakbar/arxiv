@@ -29,12 +29,12 @@ export async function recordAudio(
     recorder.onerror = () => reject(new Error("Yozib olish xatosi"));
     recorder.onstop = () => {
       resolve({
-        blob: new Blob(chunks, { type: mimeType || "audio/webm" }),
+        blob: new Blob(chunks, { type: "audio/webm" }),
         stream,
       });
     };
 
-    recorder.start();
+    recorder.start(250);
     window.setTimeout(() => {
       if (recorder.state === "recording") recorder.stop();
     }, durationMs);

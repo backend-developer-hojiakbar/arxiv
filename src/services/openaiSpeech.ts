@@ -57,8 +57,8 @@ export function listenForWakePhrase(onWake: (spokenText: string) => void): Promi
               const { text } = await api.transcribeAudio(blob);
               if (text && isWakePhrase(text)) onWake(text);
             }
-          } catch {
-            /* davom etamiz */
+          } catch (err: any) {
+            console.warn("Ziyrak transcribe:", err?.message || err);
           } finally {
             busy = false;
           }

@@ -664,7 +664,8 @@ export const api = {
 
   transcribeAudio: async (audio: Blob) => {
     const formData = new FormData();
-    formData.append("audio", audio, "recording.webm");
+    const file = new File([audio], "recording.webm", { type: "audio/webm" });
+    formData.append("audio", file);
     return request<{ text: string }>("/speech/transcribe", {
       method: "POST",
       body: formData,
