@@ -440,6 +440,7 @@ export const englishTranslations: Record<string, string> = {
   "Operatsiya Turi / Tafsiloti": "Operation type / details",
   "Orqaga": "Back",
   "Otasining ismi": "Patronymic",
+  "Ovoz sintezi xatosi": "Speech synthesis error",
   "Ovoz xizmati mavjud emas": "Voice service unavailable",
   "Oxirgi 10 ta yozuv ko'rsatiladi. To'liq tarix Excel faylida yuklab olinadi.": "Last 10 records shown. Full history exported to Excel.",
   "Oxirgi tizim faolligi:": "Last system activity:",

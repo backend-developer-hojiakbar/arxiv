@@ -7,11 +7,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { api } from "../api.ts";
 import { getDocumentPersonLabel } from "../utils/format.ts";
+import { getTimeGreeting } from "../services/speechUtils.ts";
 import { ensureMicrophoneAccess } from "../services/microphone.ts";
-import { extractQueryFromWake, getTimeGreeting } from "../services/speechUtils.ts";
 import {
   getLastSpeechError,
-  listenForWake,
   listenOnce,
   resolveSpeechMode,
   speak,
@@ -30,35 +29,13 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
   const [state, setState] = useState<AssistantState>("off");
   const [statusText, setStatusText] = useState("");
   const [speechMode, setSpeechMode] = useState<SpeechMode | "checking">("checking");
-  const busyRef = useRef(false);
   const enabledRef = useRef(false);
-  const wakeStopRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     resolveSpeechMode()
       .then((mode) => setSpeechMode(mode))
       .catch(() => setSpeechMode("none"));
   }, []);
-
-  const stopWake = useCallback(() => {
-    wakeStopRef.current?.();
-    wakeStopRef.current = null;
-  }, []);
-
-  const restartWakeListening = useCallback(async () => {
-    if (!enabledRef.current) return;
-    try {
-      const listener = await listenForWake((spoken) => {
-        void onWakeRef.current(spoken);
-      });
-      wakeStopRef.current = listener.stop;
-      setState("listening");
-      setStatusText(t("Ziyrak tinglamoqda — Hey Ziyrak deb ayting"));
-    } catch (err: any) {
-      setState("error");
-      setStatusText(err?.message || t("Ziyrak mikrofon xatosi"));
-    }
-  }, [t]);
 
   const runSearch = useCallback(
     async (rawQuery: string) => {
@@ -98,34 +75,29 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
     [onOpenSearch, t]
   );
 
-  const onWake = useCallback(
-    async (spoken: string) => {
-      if (busyRef.current || !enabledRef.current) return;
-      busyRef.current = true;
-      stopWake();
+  const conversationLoop = useCallback(async () => {
+    while (enabledRef.current) {
+      setState("query");
+      setStatusText(t("Ziyrak tinglayapti..."));
+      try {
+        const query = await listenOnce(10000);
+        if (!enabledRef.current) return;
 
-      const inlineQuery = extractQueryFromWake(spoken);
-
-      setState("greeting");
-      setStatusText(t("Ziyrak javob bermoqda..."));
-      await speak(`${getTimeGreeting()}! Men Ziyrak. Nimani qidiray?`);
-
-      let query = inlineQuery;
-      if (!query) {
-        setState("query");
-        setStatusText(t("Ziyrak tinglayapti..."));
-        query = await listenOnce(9000);
+        if (query.trim()) {
+          await runSearch(query);
+        } else {
+          setState("speaking");
+          setStatusText(t("Ziyrak: so'rov eshitilmadi"));
+          await speak("Iltimos, qidiruv so'rovini ayting.");
+        }
+      } catch (err: any) {
+        if (!enabledRef.current) return;
+        setState("error");
+        setStatusText(err?.message || t("Ziyrak mikrofon xatosi"));
+        return;
       }
-
-      await runSearch(query);
-      busyRef.current = false;
-      await restartWakeListening();
-    },
-    [restartWakeListening, runSearch, stopWake, t]
-  );
-
-  const onWakeRef = useRef(onWake);
-  onWakeRef.current = onWake;
+    }
+  }, [runSearch, t]);
 
   const startAssistant = useCallback(async () => {
     let mode = speechMode;
@@ -152,16 +124,26 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
     }
 
     enabledRef.current = true;
-    await restartWakeListening();
-  }, [restartWakeListening, speechMode, t]);
+
+    setState("greeting");
+    setStatusText(t("Ziyrak javob bermoqda..."));
+    try {
+      await speak(`${getTimeGreeting()}! Men Ziyrak. Nimani qidiray?`);
+    } catch (err: any) {
+      enabledRef.current = false;
+      setState("error");
+      setStatusText(err?.message || t("Ovoz sintezi xatosi"));
+      return;
+    }
+
+    void conversationLoop();
+  }, [conversationLoop, speechMode, t]);
 
   const stopAssistant = useCallback(() => {
     enabledRef.current = false;
-    busyRef.current = false;
-    stopWake();
     setState("off");
     setStatusText("");
-  }, [stopWake]);
+  }, []);
 
   const toggle = () => {
     if (state === "off" || state === "error") {

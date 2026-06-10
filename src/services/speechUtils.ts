@@ -9,12 +9,19 @@ export function normalizeSpeech(text: string): string {
 
 export function isWakePhrase(text: string): boolean {
   const n = normalizeSpeech(text);
-  return (
-    n.includes("ziyrak") ||
-    n.includes("зийрак") ||
-    n.includes("ziyirok") ||
-    n.includes("зийрок")
-  );
+  const variants = [
+    "ziyrak",
+    "ziyraq",
+    "ziraq",
+    "ziirak",
+    "ziyirok",
+    "зийрак",
+    "зийрок",
+    "зирак",
+    "зийрак",
+    "сийрак",
+  ];
+  return variants.some((word) => n.includes(word));
 }
 
 export function extractQueryFromWake(text: string): string {

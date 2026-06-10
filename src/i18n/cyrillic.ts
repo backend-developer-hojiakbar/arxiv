@@ -440,6 +440,7 @@ export const cyrillicTranslations: Record<string, string> = {
   "Operatsiya Turi / Tafsiloti": "Операция Тури / Тафсилоти",
   "Orqaga": "Орқага",
   "Otasining ismi": "Отасининг исми",
+  "Ovoz sintezi xatosi": "Овоз синтези хатоси",
   "Ovoz xizmati mavjud emas": "Овоз хизмати мавжуд эмас",
   "Oxirgi 10 ta yozuv ko'rsatiladi. To'liq tarix Excel faylida yuklab olinadi.": "Охирги 10 та ёзув кўрсатилади. Тўлиқ тарих Excel файлида юклаб олинади.",
   "Oxirgi tizim faolligi:": "Охирги тизим фаоллиги:",
