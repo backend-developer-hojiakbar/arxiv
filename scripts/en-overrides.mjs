@@ -147,6 +147,9 @@ export const EN_OVERRIDES = {
   "Ziyrak mikrofon xatosi": "Ziyrak: microphone error",
   "Ziyrak ishga tushmadi": "Ziyrak failed to start",
   "Azure Speech sozlanmagan": "Azure Speech is not configured",
+  "Mikrofon ruxsati so'ralmoqda...": "Requesting microphone permission...",
+  "Mikrofon ruxsati berilmadi": "Microphone permission denied",
+  "Ovoz xizmati mavjud emas": "Voice service unavailable",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -292,4 +295,7 @@ export const RU_FROM_EN_OVERRIDES = {
   "Ziyrak mikrofon xatosi": "Ziyrak: ошибка микрофона",
   "Ziyrak ishga tushmadi": "Ziyrak не запустился",
   "Azure Speech sozlanmagan": "Azure Speech не настроен",
+  "Mikrofon ruxsati so'ralmoqda...": "Запрос разрешения микрофона...",
+  "Mikrofon ruxsati berilmadi": "Доступ к микрофону не предоставлен",
+  "Ovoz xizmati mavjud emas": "Голосовой сервис недоступен",
 };

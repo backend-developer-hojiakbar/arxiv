@@ -120,6 +120,9 @@ const EXTRA_ENTRIES = {
   "Ziyrak mikrofon xatosi": "Ziyrak: микрофон хатоси",
   "Ziyrak ishga tushmadi": "Ziyrak ишга тушмади",
   "Azure Speech sozlanmagan": "Azure Speech созланмаган",
+  "Mikrofon ruxsati so'ralmoqda...": "Микрофон рухсати сўралмоқда...",
+  "Mikrofon ruxsati berilmadi": "Микрофон рухсати берилмади",
+  "Ovoz xizmati mavjud emas": "Овоз хизмати мавжуд эмас",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 

@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as sdk from "microsoft-cognitiveservices-speech-sdk";
 import { api } from "../api.ts";
 
 export interface SpeechSession {
@@ -12,9 +11,19 @@ export interface SpeechSession {
   language: string;
 }
 
+type SpeechSdk = typeof import("microsoft-cognitiveservices-speech-sdk");
+
+let sdkPromise: Promise<SpeechSdk> | null = null;
 let cachedSession: SpeechSession | null = null;
 let cachedAt = 0;
 const TOKEN_TTL_MS = 8 * 60 * 1000;
+
+async function getSdk(): Promise<SpeechSdk> {
+  if (!sdkPromise) {
+    sdkPromise = import("microsoft-cognitiveservices-speech-sdk");
+  }
+  return sdkPromise;
+}
 
 async function getSession(): Promise<SpeechSession> {
   if (cachedSession && Date.now() - cachedAt < TOKEN_TTL_MS) {
@@ -25,21 +34,32 @@ async function getSession(): Promise<SpeechSession> {
   return cachedSession;
 }
 
-function buildConfig(session: SpeechSession): sdk.SpeechConfig {
+async function buildConfig(session: SpeechSession) {
+  const sdk = await getSdk();
   const config = sdk.SpeechConfig.fromAuthorizationToken(session.token, session.region);
   config.speechRecognitionLanguage = session.language;
   config.speechSynthesisLanguage = session.language;
   config.speechSynthesisVoiceName = session.language.startsWith("uz")
     ? "uz-UZ-MadinaNeural"
     : "ru-RU-SvetlanaNeural";
-  return config;
+  return { sdk, config };
+}
+
+export async function checkAzureSpeechAvailable(): Promise<boolean> {
+  try {
+    await getSession();
+    await getSdk();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function speakText(text: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
       const session = await getSession();
-      const config = buildConfig(session);
+      const { sdk, config } = await buildConfig(session);
       const synthesizer = new sdk.SpeechSynthesizer(config);
 
       synthesizer.speakTextAsync(
@@ -63,39 +83,53 @@ export function speakText(text: string): Promise<void> {
   });
 }
 
-export function listenOnce(timeoutMs = 8000): Promise<string> {
+export function listenOnce(timeoutMs = 9000): Promise<string> {
   return new Promise(async (resolve, reject) => {
+    let recognizer: import("microsoft-cognitiveservices-speech-sdk").SpeechRecognizer | null = null;
+    let finished = false;
+
+    const finish = (text: string) => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timer);
+      try {
+        recognizer?.close();
+      } catch {
+        /* ignore */
+      }
+      resolve(text);
+    };
+
+    const timer = window.setTimeout(() => finish(""), timeoutMs);
+
     try {
       const session = await getSession();
-      const config = buildConfig(session);
+      const { sdk, config } = await buildConfig(session);
       const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
-      const recognizer = new sdk.SpeechRecognizer(config, audioConfig);
-
-      const timer = window.setTimeout(() => {
-        recognizer.stopContinuousRecognitionAsync();
-        recognizer.close();
-        resolve("");
-      }, timeoutMs);
+      recognizer = new sdk.SpeechRecognizer(config, audioConfig);
 
       recognizer.recognizeOnceAsync(
         (result) => {
-          window.clearTimeout(timer);
-          recognizer.close();
           if (result.reason === sdk.ResultReason.RecognizedSpeech) {
-            resolve(result.text.trim());
+            finish(result.text.trim());
           } else if (result.reason === sdk.ResultReason.NoMatch) {
-            resolve("");
+            finish("");
           } else {
+            finished = true;
+            window.clearTimeout(timer);
+            recognizer?.close();
             reject(new Error(result.errorDetails || "Ovoz tanilmadi"));
           }
         },
         (err) => {
+          finished = true;
           window.clearTimeout(timer);
-          recognizer.close();
+          recognizer?.close();
           reject(err);
         }
       );
     } catch (err) {
+      finish("");
       reject(err);
     }
   });
@@ -109,36 +143,39 @@ export function listenForWakePhrase(onWake: (spokenText: string) => void): Promi
   return new Promise(async (resolve, reject) => {
     try {
       const session = await getSession();
-      const config = buildConfig(session);
+      const { sdk, config } = await buildConfig(session);
       const audioConfig = sdk.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new sdk.SpeechRecognizer(config, audioConfig);
 
+      const handleText = (text: string) => {
+        if (text && isWakePhrase(text)) onWake(text);
+      };
+
       recognizer.recognizing = (_s, e) => {
         if (e.result.reason === sdk.ResultReason.RecognizingSpeech) {
-          const text = e.result.text;
-          if (isWakePhrase(text)) {
-            onWake(text);
-          }
+          handleText(e.result.text);
         }
       };
 
       recognizer.recognized = (_s, e) => {
         if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
-          const text = e.result.text;
-          if (isWakePhrase(text)) {
-            onWake(text);
-          }
+          handleText(e.result.text);
         }
       };
 
       recognizer.canceled = (_s, e) => {
         if (e.reason === sdk.CancellationReason.Error) {
-          reject(new Error(e.errorDetails));
+          reject(new Error(e.errorDetails || "Mikrofon xatosi"));
         }
       };
 
       recognizer.startContinuousRecognitionAsync(
-        () => resolve({ stop: () => recognizer.stopContinuousRecognitionAsync(() => recognizer.close()) }),
+        () =>
+          resolve({
+            stop: () => {
+              recognizer.stopContinuousRecognitionAsync(() => recognizer.close());
+            },
+          }),
         (err) => reject(err)
       );
     } catch (err) {

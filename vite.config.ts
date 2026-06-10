@@ -10,6 +10,14 @@ export default defineConfig(() => {
 
   return {
     plugins: [react()],
+    optimizeDeps: {
+      include: ["microsoft-cognitiveservices-speech-sdk"],
+    },
+    build: {
+      commonjsOptions: {
+        include: [/microsoft-cognitiveservices-speech-sdk/, /node_modules/],
+      },
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "."),
