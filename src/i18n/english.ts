@@ -483,6 +483,8 @@ export const englishTranslations: Record<string, string> = {
   "Qo'shish": "Add",
   "REAL VAQTDA": "REAL TIME",
   "Raqamlangan fayl (PDF yuklash) (*)": "Numberlangan file (PDF upload) (*)",
+  "Realtime ovoz xizmati mavjud emas": "Realtime voice service unavailable",
+  "Realtime ulanish xatosi": "Realtime connection error",
   "Ro'yxat yuklanmoqda...": "Loading list...",
   "Ro'yxati": "Listi",
   "Ro'yxatni ko'rish": "View list",

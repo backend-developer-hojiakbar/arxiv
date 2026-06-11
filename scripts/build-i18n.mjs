@@ -125,6 +125,8 @@ const EXTRA_ENTRIES = {
   "Ovoz xizmati mavjud emas": "Овоз хизмати мавжуд эмас",
   "Ziyrak tekshirilmoqda...": "Зийрак текширилмоқда...",
   "Ovoz sintezi xatosi": "Овоз синтези хатоси",
+  "Realtime ovoz xizmati mavjud emas": "Realtime овоз хизмати мавжуд эмас",
+  "Realtime ulanish xatosi": "Realtime уланиш хатоси",
 };
 Object.assign(entries, EXTRA_ENTRIES);
 

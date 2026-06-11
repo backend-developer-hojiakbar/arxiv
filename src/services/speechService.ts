@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { checkRealtimeSpeechAvailable } from "./realtimeSpeech.ts";
 import {
   checkOpenAISpeechAvailable,
   listenForWakePhrase as openaiListenWake,
@@ -17,7 +18,7 @@ import {
   browserSpeechSupported,
 } from "./browserSpeech.ts";
 
-export type SpeechMode = "openai" | "browser" | "none";
+export type SpeechMode = "realtime" | "legacy" | "browser" | "none";
 
 let mode: SpeechMode | null = null;
 let lastSpeechError = "";
@@ -41,9 +42,19 @@ export async function resolveSpeechMode(force = false): Promise<SpeechMode> {
   if (force) mode = null;
 
   try {
+    if (await checkRealtimeSpeechAvailable()) {
+      lastSpeechError = "";
+      mode = "realtime";
+      return mode;
+    }
+  } catch (err: any) {
+    lastSpeechError = err?.message || "Realtime ovoz xizmati mavjud emas";
+  }
+
+  try {
     if (await checkOpenAISpeechAvailable()) {
       lastSpeechError = "";
-      mode = "openai";
+      mode = "legacy";
       return mode;
     }
   } catch (err: any) {
@@ -60,21 +71,21 @@ export async function resolveSpeechMode(force = false): Promise<SpeechMode> {
 
 export async function speak(text: string): Promise<void> {
   const current = await resolveSpeechMode();
-  if (current === "openai") return openaiSpeak(text);
+  if (current === "legacy") return openaiSpeak(text);
   if (current === "browser") return browserSpeak(text);
   throw new Error("Ovoz xizmati mavjud emas");
 }
 
 export async function listenOnce(timeoutMs = 9000): Promise<string> {
   const current = await resolveSpeechMode();
-  if (current === "openai") return openaiListenOnce(timeoutMs);
+  if (current === "legacy") return openaiListenOnce(timeoutMs);
   if (current === "browser") return browserListenOnce(timeoutMs);
   throw new Error("Ovoz tanish mavjud emas");
 }
 
 export async function listenForWake(onWake: (text: string) => void): Promise<WakeListener> {
   const current = await resolveSpeechMode();
-  if (current === "openai") return openaiListenWake(onWake);
+  if (current === "legacy") return openaiListenWake(onWake);
   if (current === "browser") return browserListenForWake(onWake);
   throw new Error("Ovoz tanish mavjud emas");
 }

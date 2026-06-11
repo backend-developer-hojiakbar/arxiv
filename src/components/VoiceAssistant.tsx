@@ -5,20 +5,12 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
-import { api } from "../api.ts";
-import { getDocumentPersonLabel } from "../utils/format.ts";
-import { getTimeGreeting } from "../services/speechUtils.ts";
 import { ensureMicrophoneAccess } from "../services/microphone.ts";
-import {
-  getLastSpeechError,
-  listenOnce,
-  resolveSpeechMode,
-  speak,
-  type SpeechMode,
-} from "../services/speechService.ts";
+import { ZiyrakRealtimeSession } from "../services/realtimeSpeech.ts";
+import { getLastSpeechError, resolveSpeechMode, type SpeechMode } from "../services/speechService.ts";
 import { useTranslation } from "./LanguageContext.tsx";
 
-type AssistantState = "off" | "listening" | "greeting" | "query" | "searching" | "speaking" | "error";
+type AssistantState = "off" | "connecting" | "listening" | "speaking" | "searching" | "error";
 
 interface VoiceAssistantProps {
   onOpenSearch: (query: string) => void;
@@ -29,7 +21,7 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
   const [state, setState] = useState<AssistantState>("off");
   const [statusText, setStatusText] = useState("");
   const [speechMode, setSpeechMode] = useState<SpeechMode | "checking">("checking");
-  const enabledRef = useRef(false);
+  const sessionRef = useRef<ZiyrakRealtimeSession | null>(null);
 
   useEffect(() => {
     resolveSpeechMode()
@@ -37,67 +29,12 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
       .catch(() => setSpeechMode("none"));
   }, []);
 
-  const runSearch = useCallback(
-    async (rawQuery: string) => {
-      const query = rawQuery.trim();
-      if (!query) {
-        setState("speaking");
-        setStatusText(t("Ziyrak: so'rov eshitilmadi"));
-        await speak("Nimani qidirishim kerak? Iltimos, qayta ayting.");
-        return;
-      }
-
-      setState("searching");
-      setStatusText(t("Ziyrak qidiryapti..."));
-      try {
-        const res = await api.getDocuments({ q: query, page: 1, limit: 5 });
-        onOpenSearch(query);
-
-        setState("speaking");
-        if (!res.documents.length) {
-          setStatusText(t("Ziyrak: topilmadi"));
-          await speak("Kechirasiz, topa olmadim.");
-        } else {
-          const name = getDocumentPersonLabel(res.documents[0]).name;
-          const spoken =
-            res.total === 1
-              ? `${name} nomli hujjat topdim.`
-              : `${res.total} ta hujjat topdim. Birinchisi ${name}.`;
-          setStatusText(t("Ziyrak: topildi"));
-          await speak(spoken);
-        }
-      } catch {
-        setState("error");
-        setStatusText(t("Ziyrak: qidiruv xatosi"));
-        await speak("Qidiruvda xatolik yuz berdi.");
-      }
-    },
-    [onOpenSearch, t]
-  );
-
-  const conversationLoop = useCallback(async () => {
-    while (enabledRef.current) {
-      setState("query");
-      setStatusText(t("Ziyrak tinglayapti..."));
-      try {
-        const query = await listenOnce(10000);
-        if (!enabledRef.current) return;
-
-        if (query.trim()) {
-          await runSearch(query);
-        } else {
-          setState("speaking");
-          setStatusText(t("Ziyrak: so'rov eshitilmadi"));
-          await speak("Iltimos, qidiruv so'rovini ayting.");
-        }
-      } catch (err: any) {
-        if (!enabledRef.current) return;
-        setState("error");
-        setStatusText(err?.message || t("Ziyrak mikrofon xatosi"));
-        return;
-      }
-    }
-  }, [runSearch, t]);
+  const stopAssistant = useCallback(() => {
+    sessionRef.current?.stop();
+    sessionRef.current = null;
+    setState("off");
+    setStatusText("");
+  }, []);
 
   const startAssistant = useCallback(async () => {
     let mode = speechMode;
@@ -107,14 +44,15 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
       setSpeechMode(mode);
     }
 
-    if (mode === "none") {
+    if (mode !== "realtime") {
       setState("error");
       const detail = getLastSpeechError();
-      setStatusText(detail || t("Ovoz xizmati mavjud emas"));
+      setStatusText(detail || t("Realtime ovoz xizmati mavjud emas"));
       return;
     }
 
     try {
+      setState("connecting");
       setStatusText(t("Mikrofon ruxsati so'ralmoqda..."));
       await ensureMicrophoneAccess();
     } catch (err: any) {
@@ -123,27 +61,36 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
       return;
     }
 
-    enabledRef.current = true;
+    const session = new ZiyrakRealtimeSession();
+    sessionRef.current = session;
 
-    setState("greeting");
-    setStatusText(t("Ziyrak javob bermoqda..."));
     try {
-      await speak(`${getTimeGreeting()}! Men Ziyrak. Nimani qidiray?`);
+      await session.start({
+        onStatus: (text) => {
+          setStatusText(text);
+          if (text.includes("qidiryapti")) setState("searching");
+          else if (text.includes("gapir") || text.includes("javob")) setState("speaking");
+          else setState("listening");
+        },
+        onSearch: onOpenSearch,
+        onStateChange: (listening) => {
+          setState(listening ? "listening" : "off");
+        },
+        onError: (message) => {
+          setState("error");
+          setStatusText(message);
+          session.stop();
+          sessionRef.current = null;
+        },
+      });
+      setState("listening");
     } catch (err: any) {
-      enabledRef.current = false;
+      session.stop();
+      sessionRef.current = null;
       setState("error");
-      setStatusText(err?.message || t("Ovoz sintezi xatosi"));
-      return;
+      setStatusText(err?.message || t("Realtime ulanish xatosi"));
     }
-
-    void conversationLoop();
-  }, [conversationLoop, speechMode, t]);
-
-  const stopAssistant = useCallback(() => {
-    enabledRef.current = false;
-    setState("off");
-    setStatusText("");
-  }, []);
+  }, [onOpenSearch, speechMode, t]);
 
   const toggle = () => {
     if (state === "off" || state === "error") {
@@ -156,7 +103,7 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
   useEffect(() => () => stopAssistant(), [stopAssistant]);
 
   const active = state !== "off";
-  const busy = state === "greeting" || state === "query" || state === "searching" || state === "speaking";
+  const busy = state === "connecting" || state === "searching" || state === "speaking";
   const disabled = speechMode === "checking";
 
   return (

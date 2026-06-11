@@ -152,6 +152,8 @@ export const EN_OVERRIDES = {
   "Ovoz xizmati mavjud emas": "Voice service unavailable",
   "Ziyrak tekshirilmoqda...": "Checking Ziyrak...",
   "Ovoz sintezi xatosi": "Speech synthesis error",
+  "Realtime ovoz xizmati mavjud emas": "Realtime voice service unavailable",
+  "Realtime ulanish xatosi": "Realtime connection error",
 };
 
 /** Russian translations for EN_OVERRIDES keys */
@@ -302,4 +304,6 @@ export const RU_FROM_EN_OVERRIDES = {
   "Ovoz xizmati mavjud emas": "Голосовой сервис недоступен",
   "Ziyrak tekshirilmoqda...": "Проверка Ziyrak...",
   "Ovoz sintezi xatosi": "Ошибка синтеза речи",
+  "Realtime ovoz xizmati mavjud emas": "Голосовой сервис Realtime недоступен",
+  "Realtime ulanish xatosi": "Ошибка подключения Realtime",
 };

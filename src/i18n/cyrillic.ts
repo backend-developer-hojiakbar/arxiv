@@ -483,6 +483,8 @@ export const cyrillicTranslations: Record<string, string> = {
   "Qo'shish": "Қўшиш",
   "REAL VAQTDA": "",
   "Raqamlangan fayl (PDF yuklash) (*)": "Рақамланган файл (PDF юклаш) (*)",
+  "Realtime ovoz xizmati mavjud emas": "Realtime овоз хизмати мавжуд эмас",
+  "Realtime ulanish xatosi": "Realtime уланиш хатоси",
   "Ro'yxat yuklanmoqda...": "Ro'yxat yuklanmoqda...",
   "Ro'yxati": "Рўйхати",
   "Ro'yxatni ko'rish": "Рўйхатни кўриш",

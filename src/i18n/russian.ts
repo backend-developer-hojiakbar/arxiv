@@ -483,6 +483,8 @@ export const russianTranslations: Record<string, string> = {
   "Qo'shish": "Добавить",
   "REAL VAQTDA": "REAL TIME",
   "Raqamlangan fayl (PDF yuklash) (*)": "Номерlangan файл (PDF загрузка) (*)",
+  "Realtime ovoz xizmati mavjud emas": "Голосовой сервис Realtime недоступен",
+  "Realtime ulanish xatosi": "Ошибка подключения Realtime",
   "Ro'yxat yuklanmoqda...": "Загрузка списка...",
   "Ro'yxati": "Списокi",
   "Ro'yxatni ko'rish": "Просмотр списка",

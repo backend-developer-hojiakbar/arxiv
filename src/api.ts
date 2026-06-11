@@ -659,7 +659,34 @@ export const api = {
   },
 
   getSpeechStatus: async () => {
-    return request<{ available: boolean }>("/speech/status");
+    return request<{ available: boolean; realtime?: boolean; model?: string | null }>(
+      "/speech/status"
+    );
+  },
+
+  createRealtimeCall: async (offerSdp: string) => {
+    const token = getAuthToken();
+    const headers = new Headers({ "Content-Type": "application/sdp" });
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+
+    const response = await fetch(`${API_BASE}/speech/realtime/call`, {
+      method: "POST",
+      headers,
+      body: offerSdp,
+    });
+
+    if (!response.ok) {
+      let errMsg = "Realtime ulanish xatosi";
+      try {
+        const data = await response.json();
+        errMsg = parseApiError(data, errMsg);
+      } catch {
+        /* ignore */
+      }
+      throw new Error(errMsg);
+    }
+
+    return response.text();
   },
 
   transcribeAudio: async (audio: Blob) => {
