@@ -13,12 +13,17 @@ const ZIYRAK_WORDS = [
   "зийрок",
   "зирак",
   "сийрак",
+  "siirak",
 ];
 
-const WAKE_PREFIXES = ["salom", "assalom", "hey", "ok", "okay", "hay"];
+const WAKE_PREFIXES = ["salom", "assalom", "hey", "ok", "okay", "hay", "hello"];
 
 export function normalizeSpeech(text: string): string {
-  return text.toLowerCase().replace(/[.,!?;:'"]/g, " ").replace(/\s+/g, " ").trim();
+  return text
+    .toLowerCase()
+    .replace(/[.,!?;:'"]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function includesZiyrak(text: string): boolean {
@@ -29,10 +34,10 @@ export function isWakePhrase(text: string): boolean {
   const n = normalizeSpeech(text);
   if (!includesZiyrak(n)) return false;
 
-  return WAKE_PREFIXES.some((prefix) => n.includes(`${prefix} ziyrak`) || n.includes(`${prefix} ziyraq`))
-    || n.includes("salom ziyrak")
-    || n.includes("salom ziyraq")
-    || n.includes("hey ziyrak");
+  if (WAKE_PREFIXES.some((prefix) => n.includes(prefix))) return true;
+
+  const words = n.split(" ").filter(Boolean);
+  return words.length <= 5;
 }
 
 export function isGoodbyePhrase(text: string): boolean {

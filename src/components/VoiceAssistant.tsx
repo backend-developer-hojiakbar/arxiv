@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useRef, useState } from "react";
+import { unlockAudioPlayback } from "../services/microphone.ts";
 import { ZiyrakController, type ZiyrakPhase } from "../services/ziyrakController.ts";
 import { useTranslation } from "./LanguageContext.tsx";
 
@@ -34,6 +35,11 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
     };
   }, [onOpenSearch]);
 
+  const handleOrbClick = () => {
+    void unlockAudioPlayback();
+    controllerRef.current?.activate();
+  };
+
   if (phase === "off" && !statusText) return null;
 
   const orbClass =
@@ -50,14 +56,16 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
               : "bg-slate-300";
 
   return (
-    <div className="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2 no-print sm:bottom-8">
+    <div className="fixed bottom-20 right-4 z-40 flex flex-col items-end gap-2 no-print sm:bottom-6 sm:right-6">
       {statusText && (
-        <div className="max-w-[20rem] rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-2 text-center text-xs font-medium text-slate-700 shadow-lg backdrop-blur">
+        <div className="max-w-[18rem] rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-2 text-right text-xs font-medium text-slate-700 shadow-lg backdrop-blur">
           {statusText}
         </div>
       )}
-      <div
-        className={`relative flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 ${orbClass}`}
+      <button
+        type="button"
+        onClick={handleOrbClick}
+        className={`relative flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 transition-all duration-300 ${orbClass}`}
         title={t("Ziyrak ovozli yordamchi")}
         aria-label={statusText || t("Ziyrak ovozli yordamchi")}
       >
@@ -65,9 +73,9 @@ export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
         {(phase === "active" || phase === "speaking") && (
           <span className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" />
         )}
-      </div>
+      </button>
       {phase === "wake" && (
-        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">
+        <p className="text-right text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">
           Salom Ziyrak
         </p>
       )}
