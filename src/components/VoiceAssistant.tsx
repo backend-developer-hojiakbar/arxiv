@@ -3,14 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Loader2 } from "lucide-react";
-import { ensureMicrophoneAccess } from "../services/microphone.ts";
-import { ZiyrakRealtimeSession } from "../services/realtimeSpeech.ts";
-import { getLastSpeechError, resolveSpeechMode, type SpeechMode } from "../services/speechService.ts";
+import React, { useEffect, useRef, useState } from "react";
+import { ZiyrakController, type ZiyrakPhase } from "../services/ziyrakController.ts";
 import { useTranslation } from "./LanguageContext.tsx";
-
-type AssistantState = "off" | "connecting" | "listening" | "speaking" | "searching" | "error";
 
 interface VoiceAssistantProps {
   onOpenSearch: (query: string) => void;
@@ -18,121 +13,64 @@ interface VoiceAssistantProps {
 
 export default function VoiceAssistant({ onOpenSearch }: VoiceAssistantProps) {
   const { t } = useTranslation();
-  const [state, setState] = useState<AssistantState>("off");
+  const controllerRef = useRef<ZiyrakController | null>(null);
+  const [phase, setPhase] = useState<ZiyrakPhase>("off");
   const [statusText, setStatusText] = useState("");
-  const [speechMode, setSpeechMode] = useState<SpeechMode | "checking">("checking");
-  const sessionRef = useRef<ZiyrakRealtimeSession | null>(null);
 
   useEffect(() => {
-    resolveSpeechMode()
-      .then((mode) => setSpeechMode(mode))
-      .catch(() => setSpeechMode("none"));
-  }, []);
+    const controller = new ZiyrakController();
+    controllerRef.current = controller;
 
-  const stopAssistant = useCallback(() => {
-    sessionRef.current?.stop();
-    sessionRef.current = null;
-    setState("off");
-    setStatusText("");
-  }, []);
+    void controller.start({
+      onPhase: setPhase,
+      onStatus: setStatusText,
+      onSearch: onOpenSearch,
+      onError: setStatusText,
+    });
 
-  const startAssistant = useCallback(async () => {
-    let mode = speechMode;
-    if (mode === "checking" || mode === "none") {
-      setStatusText(t("Ziyrak tekshirilmoqda..."));
-      mode = await resolveSpeechMode(true);
-      setSpeechMode(mode);
-    }
+    return () => {
+      controller.stop();
+      controllerRef.current = null;
+    };
+  }, [onOpenSearch]);
 
-    if (mode !== "realtime") {
-      setState("error");
-      const detail = getLastSpeechError();
-      setStatusText(detail || t("Realtime ovoz xizmati mavjud emas"));
-      return;
-    }
+  if (phase === "off" && !statusText) return null;
 
-    try {
-      setState("connecting");
-      setStatusText(t("Mikrofon ruxsati so'ralmoqda..."));
-      await ensureMicrophoneAccess();
-    } catch (err: any) {
-      setState("error");
-      setStatusText(err?.message || t("Mikrofon ruxsati berilmadi"));
-      return;
-    }
-
-    const session = new ZiyrakRealtimeSession();
-    sessionRef.current = session;
-
-    try {
-      await session.start({
-        onStatus: (text) => {
-          setStatusText(text);
-          if (text.includes("qidiryapti")) setState("searching");
-          else if (text.includes("gapir") || text.includes("javob")) setState("speaking");
-          else setState("listening");
-        },
-        onSearch: onOpenSearch,
-        onStateChange: (listening) => {
-          setState(listening ? "listening" : "off");
-        },
-        onError: (message) => {
-          setState("error");
-          setStatusText(message);
-          session.stop();
-          sessionRef.current = null;
-        },
-      });
-      setState("listening");
-    } catch (err: any) {
-      session.stop();
-      sessionRef.current = null;
-      setState("error");
-      setStatusText(err?.message || t("Realtime ulanish xatosi"));
-    }
-  }, [onOpenSearch, speechMode, t]);
-
-  const toggle = () => {
-    if (state === "off" || state === "error") {
-      void startAssistant();
-    } else {
-      stopAssistant();
-    }
-  };
-
-  useEffect(() => () => stopAssistant(), [stopAssistant]);
-
-  const active = state !== "off";
-  const busy = state === "connecting" || state === "searching" || state === "speaking";
-  const disabled = speechMode === "checking";
+  const orbClass =
+    phase === "wake"
+      ? "bg-slate-400/80 shadow-[0_0_24px_rgba(100,116,139,0.45)] animate-pulse"
+      : phase === "connecting" || phase === "searching"
+        ? "bg-amber-400 shadow-[0_0_28px_rgba(251,191,36,0.55)] animate-pulse"
+        : phase === "speaking"
+          ? "bg-emerald-500 shadow-[0_0_32px_rgba(16,185,129,0.6)] animate-pulse"
+          : phase === "active"
+            ? "bg-primary-500 shadow-[0_0_32px_rgba(59,130,246,0.65)] animate-pulse"
+            : phase === "error"
+              ? "bg-red-500 shadow-[0_0_24px_rgba(239,68,68,0.5)]"
+              : "bg-slate-300";
 
   return (
-    <div className="fixed bottom-20 right-4 z-40 flex flex-col items-end gap-2 no-print sm:bottom-6 sm:right-6">
+    <div className="fixed bottom-20 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2 no-print sm:bottom-8">
       {statusText && (
-        <div className="max-w-[18rem] rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
+        <div className="max-w-[20rem] rounded-2xl border border-slate-200/80 bg-white/95 px-4 py-2 text-center text-xs font-medium text-slate-700 shadow-lg backdrop-blur">
           {statusText}
         </div>
       )}
-      <button
-        type="button"
-        onClick={toggle}
-        disabled={disabled}
-        className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold shadow-lg transition-all disabled:opacity-50 ${
-          active
-            ? "bg-primary-600 text-white ring-4 ring-primary-200"
-            : "border border-slate-200 bg-white text-slate-700 hover:border-primary-300"
-        }`}
+      <div
+        className={`relative flex h-14 w-14 items-center justify-center rounded-full transition-all duration-300 ${orbClass}`}
         title={t("Ziyrak ovozli yordamchi")}
+        aria-label={statusText || t("Ziyrak ovozli yordamchi")}
       >
-        {busy || disabled ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : active ? (
-          <Mic className="h-4 w-4" />
-        ) : (
-          <MicOff className="h-4 w-4" />
+        <span className="h-5 w-5 rounded-full bg-white/90" />
+        {(phase === "active" || phase === "speaking") && (
+          <span className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" />
         )}
-        Ziyrak
-      </button>
+      </div>
+      {phase === "wake" && (
+        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">
+          Salom Ziyrak
+        </p>
+      )}
     </div>
   );
 }

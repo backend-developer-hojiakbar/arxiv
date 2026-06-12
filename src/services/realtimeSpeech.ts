@@ -4,13 +4,14 @@
  */
 
 import { api } from "../api.ts";
-import { getDocumentPersonLabel } from "../utils/format.ts";
+import { formatDocumentForVoice } from "../utils/format.ts";
 
 export type RealtimeCallbacks = {
   onStatus: (text: string) => void;
   onSearch: (query: string) => void;
   onStateChange: (listening: boolean) => void;
   onError: (message: string) => void;
+  onIdle: () => void;
 };
 
 type RealtimeServerEvent = {
@@ -18,6 +19,7 @@ type RealtimeServerEvent = {
   call_id?: string;
   name?: string;
   arguments?: string;
+  transcript?: string;
   response?: {
     output?: Array<{
       type?: string;
@@ -40,13 +42,18 @@ export class ZiyrakRealtimeSession {
   private audioEl: HTMLAudioElement | null = null;
   private handledCalls = new Set<string>();
   private active = false;
+  private idleTimer: number | null = null;
+  private idleMs = 120_000;
+  private onIdle: (() => void) | null = null;
 
-  async start(callbacks: RealtimeCallbacks): Promise<void> {
+  async start(callbacks: RealtimeCallbacks, idleMs = 120_000): Promise<void> {
     if (this.active) return;
     this.active = true;
+    this.idleMs = idleMs;
+    this.onIdle = callbacks.onIdle;
     this.handledCalls.clear();
 
-    callbacks.onStatus("Realtime ulanmoqda...");
+    callbacks.onStatus("Ziyrak ulanmoqda...");
     callbacks.onStateChange(true);
 
     const pc = new RTCPeerConnection();
@@ -59,7 +66,13 @@ export class ZiyrakRealtimeSession {
       audio.srcObject = event.streams[0];
     };
 
-    const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mic = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
     this.micStream = mic;
     pc.addTrack(mic.getTracks()[0]);
 
@@ -76,12 +89,14 @@ export class ZiyrakRealtimeSession {
     };
 
     dc.onopen = () => {
-      callbacks.onStatus("Ziyrak tinglayapti — gapiring");
+      this.resetIdleTimer();
+      callbacks.onStatus("Ziyrak faol — gapiring");
       dc.send(
         JSON.stringify({
           type: "response.create",
           response: {
-            instructions: "Foydalanuvchiga qisqa salomlash va qanday qidirish mumkinligini ayt.",
+            instructions:
+              "Foydalanuvchi Salom Ziyrak dedi. Iliq tabiiy o'zbek tilida ayt: Salom! Qanday yordam bera olaman?",
           },
         })
       );
@@ -93,11 +108,14 @@ export class ZiyrakRealtimeSession {
     const answerSdp = await api.createRealtimeCall(offer.sdp || "");
     await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
 
-    callbacks.onStatus("Ziyrak tayyor — gapiring");
+    callbacks.onStatus("Ziyrak tinglayapti...");
+    this.resetIdleTimer();
   }
 
   stop(): void {
     this.active = false;
+    if (this.idleTimer) window.clearTimeout(this.idleTimer);
+    this.idleTimer = null;
     this.dc?.close();
     this.dc = null;
     this.pc?.close();
@@ -109,13 +127,31 @@ export class ZiyrakRealtimeSession {
       this.audioEl = null;
     }
     this.handledCalls.clear();
+    this.onIdle = null;
   }
 
   isActive(): boolean {
     return this.active;
   }
 
+  private resetIdleTimer(): void {
+    if (!this.active || !this.onIdle) return;
+    if (this.idleTimer) window.clearTimeout(this.idleTimer);
+    this.idleTimer = window.setTimeout(() => {
+      if (this.active) {
+        this.stop();
+        this.onIdle?.();
+      }
+    }, this.idleMs);
+  }
+
   private async handleServerEvent(event: RealtimeServerEvent, callbacks: RealtimeCallbacks): Promise<void> {
+    if (event.type === "input_audio_buffer.speech_started") {
+      this.resetIdleTimer();
+      callbacks.onStatus("Ziyrak tinglayapti...");
+      return;
+    }
+
     if (event.type === "response.function_call_arguments.done") {
       if (event.call_id && event.name && event.arguments) {
         await this.executeTool(event.call_id, event.name, event.arguments, callbacks);
@@ -124,6 +160,7 @@ export class ZiyrakRealtimeSession {
     }
 
     if (event.type === "response.done") {
+      this.resetIdleTimer();
       const outputs = event.response?.output || [];
       for (const item of outputs) {
         if (item.type === "function_call" && item.call_id && item.name && item.arguments) {
@@ -138,12 +175,11 @@ export class ZiyrakRealtimeSession {
       return;
     }
 
-    if (event.type === "response.output_audio_transcript.delta") {
+    if (
+      event.type === "response.output_audio_transcript.delta" ||
+      event.type === "response.output_audio.delta"
+    ) {
       callbacks.onStatus("Ziyrak gapirmoqda...");
-    }
-
-    if (event.type === "input_audio_buffer.speech_started") {
-      callbacks.onStatus("Ziyrak tinglayapti...");
     }
   }
 
@@ -177,25 +213,22 @@ export class ZiyrakRealtimeSession {
       const res = await api.getDocuments({ q: query, page: 1, limit: 5 });
       callbacks.onSearch(query);
 
-      const documents = res.documents.slice(0, 3).map((doc) => {
-        const label = getDocumentPersonLabel(doc);
-        return {
-          name: label.name,
-          doc_name: doc.docName,
-          person_type: label.type,
-        };
-      });
+      const documents = res.documents.slice(0, 3).map((doc) => formatDocumentForVoice(doc));
 
       this.sendToolResult(callId, {
         found: documents.length > 0,
         total: res.total,
         query,
         documents,
+        instruction:
+          documents.length > 0
+            ? "Har bir natija uchun person_name, doc_name, location_text ni ovozda ayt."
+            : "Topilmadi deb ayt.",
         message:
           documents.length === 0
             ? "Hech narsa topilmadi"
-            : res.total === 1
-              ? `${documents[0].name} topildi`
+            : documents.length === 1
+              ? documents[0].verbal
               : `${res.total} ta hujjat topildi`,
       });
     } catch {
@@ -221,5 +254,6 @@ export class ZiyrakRealtimeSession {
       })
     );
     this.dc.send(JSON.stringify({ type: "response.create" }));
+    this.resetIdleTimer();
   }
 }

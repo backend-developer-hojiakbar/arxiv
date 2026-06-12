@@ -20,6 +20,48 @@ export function formatPersonName(
     .trim() || fallback;
 }
 
+export function getDocumentLocationLabel(doc: {
+  cabinet?: { name?: string } | null;
+  cabinetId?: string;
+  floor?: number;
+  notes?: string | null;
+}): string {
+  const cabinet = doc.cabinet?.name || doc.cabinetId || "noma'lum shkaf";
+  const floor = doc.floor ?? "?";
+  let text = `${cabinet}, ${floor}-qavat`;
+  if (doc.notes?.trim()) {
+    text += `. ${doc.notes.trim()}`;
+  }
+  return text;
+}
+
+export function formatDocumentForVoice(doc: {
+  docName?: string;
+  floor?: number;
+  notes?: string | null;
+  cabinet?: { name?: string } | null;
+  cabinetId?: string;
+  category?: { name?: string } | null;
+  student?: { lastName?: string; firstName?: string; middleName?: string; studentId?: string } | null;
+  employee?: { lastName?: string; firstName?: string; middleName?: string; employeeId?: string } | null;
+  studentName?: string | null;
+  employeeName?: string | null;
+  personType?: string;
+}) {
+  const person = getDocumentPersonLabel(doc);
+  const locationText = getDocumentLocationLabel(doc);
+  return {
+    person_name: person.name,
+    person_type: person.type,
+    doc_name: doc.docName || "",
+    category_name: doc.category?.name || "",
+    cabinet_name: doc.cabinet?.name || doc.cabinetId || "",
+    floor: doc.floor,
+    location_text: locationText,
+    verbal: `${person.name}. Hujjat: ${doc.docName || "hujjat"}. Joylashuv: ${locationText}.`,
+  };
+}
+
 export function getDocumentPersonLabel(doc: {
   student?: { lastName?: string; firstName?: string; middleName?: string; studentId?: string } | null;
   employee?: { lastName?: string; firstName?: string; middleName?: string; employeeId?: string } | null;

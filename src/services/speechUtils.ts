@@ -3,31 +3,54 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+const ZIYRAK_WORDS = [
+  "ziyrak",
+  "ziyraq",
+  "ziraq",
+  "ziirak",
+  "ziyirok",
+  "зийрак",
+  "зийрок",
+  "зирак",
+  "сийрак",
+];
+
+const WAKE_PREFIXES = ["salom", "assalom", "hey", "ok", "okay", "hay"];
+
 export function normalizeSpeech(text: string): string {
   return text.toLowerCase().replace(/[.,!?;:'"]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function includesZiyrak(text: string): boolean {
+  return ZIYRAK_WORDS.some((word) => text.includes(word));
+}
+
 export function isWakePhrase(text: string): boolean {
   const n = normalizeSpeech(text);
-  const variants = [
-    "ziyrak",
-    "ziyraq",
-    "ziraq",
-    "ziirak",
-    "ziyirok",
-    "зийрак",
-    "зийрок",
-    "зирак",
-    "зийрак",
-    "сийрак",
-  ];
-  return variants.some((word) => n.includes(word));
+  if (!includesZiyrak(n)) return false;
+
+  return WAKE_PREFIXES.some((prefix) => n.includes(`${prefix} ziyrak`) || n.includes(`${prefix} ziyraq`))
+    || n.includes("salom ziyrak")
+    || n.includes("salom ziyraq")
+    || n.includes("hey ziyrak");
+}
+
+export function isGoodbyePhrase(text: string): boolean {
+  const n = normalizeSpeech(text);
+  return (
+    n.includes("rahmat") ||
+    n.includes("xayr") ||
+    n.includes("hayr") ||
+    n.includes("yop") ||
+    n.includes("to'xtat") ||
+    n.includes("stop")
+  );
 }
 
 export function extractQueryFromWake(text: string): string {
   let q = normalizeSpeech(text);
-  q = q.replace(/^(hey|salom|assalomu alaykum)\s+/i, "");
-  q = q.replace(/ziyrak|зийрак|ziyirok|зийрок/g, "");
+  q = q.replace(/^(hey|salom|assalomu alaykum|ok|okay)\s+/i, "");
+  q = q.replace(/ziyrak|ziyraq|ziraq|ziirak|ziyirok|зийрак|зийрок|зирак|сийрак/g, "");
   return q.trim();
 }
 
